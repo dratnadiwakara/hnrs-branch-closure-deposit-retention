@@ -1,0 +1,164 @@
+---
+title: "Bank-County-Year Regressions: Baseline and Combined Heterogeneity"
+format: html
+type: source
+execute:
+  warning: false
+  message: false
+---
+
+## Setup
+
+```{r}
+rm(list = ls())
+
+library(data.table)
+library(fixest)
+library(here)
+
+data_path <- here::here("data")
+
+save_tables <- FALSE
+dat_suffix  <- format(Sys.time(), "%Y%m%d_%H%M%S")
+```
+
+## Data loading
+
+This section loads the regression-ready bank-county-year panel `reg_main`
+constructed by `code/v20260410/sample-construction/bank_county_year_sample_20260409.R`.
+The unit of observation is a bank-county-year. The dependent variable is
+one-year deposit growth at remaining branches normalized by total initial
+deposits (`growth_on_total_t1`). The sample retains bank-county-years with
+positive initial deposits, at least one surviving branch, and non-missing
+growth outcomes, after applying closure and M&A filters.
+
+```{r}
+# Data created by code/v20260410/sample-construction/bank_county_year_sample_20260409.R
+reg_main_files <- list.files(
+  data_path,
+  pattern = "^reg_main_\\d{8}_\\d{6}\\.rds$",
+  full.names = TRUE
+)
+if (!length(reg_main_files)) {
+  stop("No reg_main_*.rds files found in data/. Run the sample-construction script first.")
+}
+reg_main_file <- reg_main_files[which.max(file.mtime(reg_main_files))]
+message("Loading: ", basename(reg_main_file))
+
+reg_main <- readRDS(reg_main_file)
+setDT(reg_main)
+```
+
+## Data preparation
+
+The sample has `large_bank` (any year with assets > $100B) and `top4_bank`
+but not `large_but_not_top4_bank`. We derive it here to match the three-way
+bank size classification used in the branch-year regressions.
+
+```{r}
+reg_main[, large_but_not_top4_bank := as.integer(large_bank == 1L & top4_bank == 0L)]
+```
+
+## Fixest global configuration
+
+```{r}
+setFixest_fml(
+  ..fixef    = ~ bank_id^YEAR + county^YEAR,
+  ..controls = ~ log1p(total_deps_bank_county_t1) +
+    log1p(n_remaining_branches) +
+    mkt_share_county_t1
+)
+
+setFixest_etable(
+  signif.code = c("***" = 0.01, "**" = 0.05, "*" = 0.1),
+  se.below = TRUE
+)
+```
+
+## Table 1: Baseline effect of closure intensity on deposit growth at remaining branches
+
+This table estimates the effect of closure intensity (`closure_share`) on
+deposit growth at remaining branches (`growth_on_total_t1`). Column 1
+restricts to years before 2012; column 2 pools 2012--2024; column 3 restricts
+to 2012--2019. All columns include bank-year and county-year interacted fixed
+effects, with standard errors clustered at the bank level.
+
+```{r}
+r_baseline <- list(
+  "Pre 2012"  = feols(
+    growth_on_total_t1 ~ closure_share + ..controls | ..fixef,
+    data = reg_main[YEAR < 2012],
+    vcov = ~bank_id
+  ),
+  "2012-2024" = feols(
+    growth_on_total_t1 ~ closure_share + ..controls | ..fixef,
+    data = reg_main[YEAR >= 2012],
+    vcov = ~bank_id
+  ),
+  "2012-2019" = feols(
+    growth_on_total_t1 ~ closure_share + ..controls | ..fixef,
+    data = reg_main[YEAR %in% 2012:2019],
+    vcov = ~bank_id
+  )
+)
+
+etable(r_baseline)
+
+export_table_baseline <- FALSE
+
+if (isTRUE(save_tables) && isTRUE(export_table_baseline)) {
+  table_tex <- etable(r_baseline, tex = TRUE)
+  writeLines(
+    table_tex,
+    con = here::here("docs", "tables", paste0("bank_cty_baseline_", dat_suffix, ".tex"))
+  )
+}
+```
+
+## Table 2: Combined heterogeneity -- incumbent-bank size and mobile penetration
+
+This table merges the bank-size and mobile-penetration heterogeneity
+specifications into a single model. The dependent variable is
+`growth_on_total_t1`. The right-hand side includes the direct effect of
+`closure_share` and its interactions with `top4_bank`,
+`large_but_not_top4_bank` (small is the omitted category), and county-level
+mobile subscription penetration (`perc_hh_wMobileSub`). The main effects of
+`top4_bank` and `large_but_not_top4_bank` are absorbed by `bank_id^YEAR`
+fixed effects; `perc_hh_wMobileSub` is absorbed by `county^YEAR` fixed
+effects, so only the interactions enter. Column 1 pools 2012--2024; column 2
+restricts to 2012--2019. Standard errors clustered at the bank level.
+
+```{r}
+r_het <- list(
+  "2012-2024" = feols(
+    growth_on_total_t1 ~ closure_share +
+      closure_share:top4_bank +
+      closure_share:large_but_not_top4_bank +
+      closure_share:perc_hh_wMobileSub +
+      ..controls | ..fixef,
+    data = reg_main[YEAR >= 2012],
+    vcov = ~bank_id
+  ),
+  "2012-2019" = feols(
+    growth_on_total_t1 ~ closure_share +
+      closure_share:top4_bank +
+      closure_share:large_but_not_top4_bank +
+      closure_share:perc_hh_wMobileSub +
+      ..controls | ..fixef,
+    data = reg_main[YEAR %in% 2012:2019],
+    vcov = ~bank_id
+  )
+)
+
+etable(r_het, order = "closure_share")
+
+export_table_het <- FALSE
+
+if (isTRUE(save_tables) && isTRUE(export_table_het)) {
+  table_tex <- etable(r_het, order = "closure_share", tex = TRUE)
+  writeLines(
+    table_tex,
+    con = here::here("docs", "tables", paste0("bank_cty_combined_het_", dat_suffix, ".tex"))
+  )
+}
+```

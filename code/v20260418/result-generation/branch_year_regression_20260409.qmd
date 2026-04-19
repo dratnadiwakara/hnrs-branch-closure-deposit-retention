@@ -1,0 +1,198 @@
+---
+title: "Branch-Year Regressions: Baseline and Combined Heterogeneity"
+format: html
+type: source
+execute:
+  warning: false
+  message: false
+---
+
+## Setup
+
+```{r}
+rm(list = ls())
+
+library(data.table)
+library(fixest)
+library(here)
+
+data_path <- here::here("data")
+
+save_tables <- FALSE
+dat_suffix  <- format(Sys.time(), "%Y%m%d")
+```
+
+## Data loading
+
+This section loads the branch-year regression sample constructed by
+`code/v20260410/sample-construction/build_branch_panel_regression_sample_20260409.R`,
+which includes observations back to 2001. The unit of observation is a
+branch-year for incumbent banks (banks that do not close a branch in the
+county-year). The dependent variable is one-year branch-level deposit growth
+(`gr_branch`). Key right-hand side variables include county-level closure
+shares (overall and decomposed by closing-bank type and app adoption) and
+interactions with incumbent-bank and county characteristics.
+
+```{r}
+# Data created by code/v20260410/sample-construction/build_branch_panel_regression_sample_20260409.R
+sample_files <- list.files(
+  data_path,
+  pattern = "^branch_panel_regression_sample_\\d{8}\\.rds$",
+  full.names = TRUE
+)
+if (!length(sample_files)) {
+  stop("No branch_panel_regression_sample_*.rds found in data/. Run the sample-construction script first.")
+}
+sample_file <- sample_files[which.max(file.mtime(sample_files))]
+message("Loading: ", basename(sample_file))
+
+reg_dt <- readRDS(sample_file)
+setDT(reg_dt)
+
+dt <- reg_dt[incumbent_bank == 1]
+```
+
+## Fixest global configuration
+
+```{r}
+setFixest_fml(
+  ..fixef    = ~ UNINUMBR + state_yr + bank_yr,
+  ..controls = ~ log1p(banks_county_lag1) +
+    county_dep_growth_t4_t1 +
+    log1p(dep_lag1_aligned) +
+    log_population_density +
+    lag_county_deposit_hhi +
+    lag_establishment_gr +
+    lag_payroll_gr +
+    lag_hmda_mtg_amt_gr +
+    lag_cra_loan_amount_amt_lt_1m_gr +
+    lmi
+)
+
+setFixest_etable(
+  signif.code = c("***" = 0.01, "**" = 0.05, "*" = 0.1),
+  se.below = TRUE
+)
+```
+
+## Table 1: Baseline effect of closure exposure on surviving-branch deposit growth
+
+This table estimates the effect of county-level closure exposure on branch
+deposit growth using a single aggregate closure measure (`share_deps_closed`).
+The sample is branch-year observations for incumbent banks. The dependent
+variable is one-year branch-level deposit growth (`gr_branch`). Column 1
+restricts the sample to years before 2012; column 2 pools 2012--2024; column 3
+restricts to 2012--2019. All columns include branch, state-year, and bank-year
+fixed effects, with standard errors clustered at the branch level.
+
+```{r}
+r_baseline <- list(
+  "Pre 2012"  = feols(
+    gr_branch ~ share_deps_closed + ..controls | ..fixef,
+    data = dt[YEAR < 2012],
+    vcov = ~UNINUMBR
+  ),
+  "2012-2024" = feols(
+    gr_branch ~ share_deps_closed + ..controls | ..fixef,
+    data = dt[YEAR >= 2012],
+    vcov = ~UNINUMBR
+  ),
+  "2012-2019" = feols(
+    gr_branch ~ share_deps_closed + ..controls | ..fixef,
+    data = dt[YEAR %in% 2012:2019],
+    vcov = ~UNINUMBR
+  )
+)
+
+etable(r_baseline)
+
+export_table_baseline <- FALSE
+
+if (isTRUE(save_tables) && isTRUE(export_table_baseline)) {
+  table_tex <- etable(r_baseline, tex = TRUE)
+  writeLines(
+    table_tex,
+    con = here::here("docs", "tables", paste0("branch_baseline_", dat_suffix, ".tex"))
+  )
+}
+```
+
+## Table 2: Combined heterogeneity -- closing-bank type, incumbent-bank size, and mobile penetration
+
+This table consolidates the heterogeneity analyses previously reported in
+separate tables (closure decomposition by closing-bank type, incumbent-bank
+size interactions, and mobile-penetration interactions) into a single
+specification. The dependent variable is `gr_branch`. The right-hand side
+includes three mutually exclusive closure-share measures by closing-bank type
+(`share_deps_closed_app`, `share_deps_closed_noapp`, `share_deps_closed_top4`),
+interactions of overall `share_deps_closed` with incumbent-bank indicators
+(`top4_bank`, `large_but_not_top4_bank`; small is the omitted category), and
+the interaction of `share_deps_closed` with county-level mobile subscription
+penetration (`perc_hh_wMobileSub`). `perc_hh_wMobileSub` also enters as a
+main effect since it is not absorbed by the fixed effects. Column 1 pools
+2012--2024; column 2 restricts to 2012--2019. Standard errors clustered at
+the branch level.
+
+```{r}
+r_het <- list(
+  "2012-2024" = feols(
+    gr_branch ~ share_deps_closed_app +
+      share_deps_closed_noapp +
+      share_deps_closed_top4 +
+      share_deps_closed:top4_bank +
+      share_deps_closed:large_but_not_top4_bank +
+      share_deps_closed:perc_hh_wMobileSub +
+      perc_hh_wMobileSub +
+      ..controls | ..fixef,
+    data = dt[YEAR >= 2012 & share_deps_closed>0],
+    vcov = ~UNINUMBR
+  ),
+ "2012-2019" = feols(gr_branch ~ share_deps_closed_app +
+      share_deps_closed_noapp +
+      share_deps_closed_top4 +
+      share_deps_closed:top4_bank +
+      share_deps_closed:large_but_not_top4_bank +
+      share_deps_closed:perc_hh_wMobileSub +
+      perc_hh_wMobileSub +
+      ..controls | ..fixef,
+    data = dt[YEAR %in% 2012:2019  & share_deps_closed>0],
+    vcov = ~UNINUMBR
+  )
+)
+
+
+etable(
+  r_het,
+  order = c(
+    "share_deps_closed_app",
+    "share_deps_closed_noapp",
+    "share_deps_closed_top4",
+    "share_deps_closed.*top4_bank",
+    "share_deps_closed.*large_but_not_top4_bank",
+    "share_deps_closed.*perc_hh_wMobileSub",
+    "perc_hh_wMobileSub"
+  )
+)
+
+export_table_het <- FALSE
+
+if (isTRUE(save_tables) && isTRUE(export_table_het)) {
+  table_tex <- etable(
+    r_het,
+    order = c(
+      "share_deps_closed_app",
+      "share_deps_closed_noapp",
+      "share_deps_closed_top4",
+      "share_deps_closed.*top4_bank",
+      "share_deps_closed.*large_but_not_top4_bank",
+      "share_deps_closed.*perc_hh_wMobileSub",
+      "perc_hh_wMobileSub"
+    ),
+    tex = TRUE
+  )
+  writeLines(
+    table_tex,
+    con = here::here("docs", "tables", paste0("branch_combined_het_", dat_suffix, ".tex"))
+  )
+}
+```

@@ -1,0 +1,271 @@
+---
+title: "Sun & Abraham Event-Study: Bank–County Deposits and Branch Counts"
+format: html
+type: source
+execute:
+  warning: false
+  message: false
+---
+
+```{r}
+rm(list = ls())
+
+library(data.table)
+library(fixest)
+library(ggplot2)
+library(ggfixest)
+library(here)
+
+data_path <- here::here("data")
+save_figures <- FALSE
+save_tables  <- FALSE
+dat_suffix <- format(Sys.time(), "%Y%m%d_%H%M%S")
+params <- list(never_treated_share = 0.5)
+
+primary_blue   <- "#012169"
+primary_gold   <- "#f2a900"
+accent_gray    <- "#525252"
+positive_green <- "#15803d"
+negative_red   <- "#b91c1c"
+
+#' Custom ggplot2 theme with project styling.
+theme_custom <- function(base_size = 14) {
+  theme_minimal(base_size = base_size) +
+    theme(
+      plot.title       = element_text(face = "bold", color = primary_blue),
+      legend.position  = "bottom",
+      legend.title     = element_blank(),
+      plot.background  = element_rect(fill = "transparent", color = NA),
+      panel.background = element_rect(fill = "transparent", color = NA)
+    )
+}
+```
+
+### Load Sun & Abraham inputs
+
+Load the branch-level panel, bank–county–year panel, and pre-built Sun & Abraham event-study panels produced by the sample-construction script. The analysis uses the saved panels for the all-branch and consistent-branch event-study figures so that all downstream uses share the exact same sample.
+
+```{r}
+# Data created by code/v20260410/sample-construction/bank_county_year_sunab_sample_20260409.R
+closure_app_files <- list.files(data_path, pattern = "^sunab_closure_app_\\d{8}_\\d{6}\\.rds$", full.names = TRUE)
+bank_cty_yr_files <- list.files(data_path, pattern = "^sunab_bank_cty_yr_\\d{8}_\\d{6}\\.rds$", full.names = TRUE)
+panel_all_files  <- list.files(data_path, pattern = "^sunab_panel_all_\\d{8}_\\d{6}\\.rds$", full.names = TRUE)
+panel_cons_files <- list.files(data_path, pattern = "^sunab_panel_consistent_\\d{8}_\\d{6}\\.rds$", full.names = TRUE)
+if (!length(closure_app_files) || !length(bank_cty_yr_files) || !length(panel_all_files) || !length(panel_cons_files)) {
+  stop("Missing sunab_*.rds or sunab_panel_*.rds in data/. Run the sample-construction script first.")
+}
+closure_app <- readRDS(closure_app_files[which.max(file.mtime(closure_app_files))])
+bank_cty_yr <- readRDS(bank_cty_yr_files[which.max(file.mtime(bank_cty_yr_files))])
+sunab_panel_all <- readRDS(panel_all_files[which.max(file.mtime(panel_all_files))])
+sunab_panel_consistent <- readRDS(panel_cons_files[which.max(file.mtime(panel_cons_files))])
+setDT(closure_app)
+setDT(bank_cty_yr)
+setDT(sunab_panel_all)
+setDT(sunab_panel_consistent)
+```
+
+### Event-study helpers
+
+Define helpers to extract event-time coefficients from Sun & Abraham models and to add the reference period to the plot data.
+
+```{r}
+sunab_tidy <- function(model, label) {
+  ct <- as.data.table(coeftable(model), keep.rownames = "term")
+  ct <- ct[grepl("sunab\\(|::", term)]
+  if (nrow(ct) == 0) stop("No sunab terms detected. Check that the model includes sunab(cohort, YEAR, ...).")
+  ct[, event_time := as.integer(gsub(".*?(-?\\d+)\\D*$", "\\1", term))]
+  ct[, `:=`(estimate = Estimate, se = `Std. Error`, period = label)]
+  ct[, .(period, event_time, estimate, se)]
+}
+
+add_ref_point <- function(es_dt, ref = -1L) {
+  refs <- unique(es_dt[, .(period)])
+  refs[, `:=`(event_time = ref, estimate = 0, se = 0)]
+  out <- rbindlist(list(es_dt, refs), fill = TRUE)
+  setorder(out, period, event_time)
+  out
+}
+```
+
+### Sun & Abraham: all branch deposits by period
+
+The exhibit plots event-time coefficients from Sun & Abraham (2021) regressions of log(1 + total deposits at all branches) on cohort-time dummies, separately for three periods (Pre 2012, 2012–2019, 2020–2024), superimposed. The unit of observation is bank–county–year. The sample includes treated bank–counties (first closure year with not all closures M&A-related) in a ±3 year window around first closure and a 50% random sample of never-treated bank–counties. The dependent variable is log(1 + total deposits across all branches in the bank–county–year). The right-hand side is the Sun & Abraham aggregation of cohort × event-time indicators with reference at event time -1; fixed effects are unit (bank–county) and year; standard errors are clustered by bank. Each series is the estimated event-time effect for that period; bands show 95% confidence intervals.
+
+```{r}
+sunab_pre2012   <- feols(log1p(total_deps_all_branches) ~ sunab(cohort, YEAR, ref.p = -1) | unit_id + YEAR, data = sunab_panel_all[YEAR < 2012], vcov = ~ bank_id)
+sunab_2012_2019 <- feols(log1p(total_deps_all_branches) ~ sunab(cohort, YEAR, ref.p = -1) | unit_id + YEAR, data = sunab_panel_all[YEAR >= 2012 & YEAR <= 2019], vcov = ~ bank_id)
+sunab_2020_2024 <- feols(log1p(total_deps_all_branches) ~ sunab(cohort, YEAR, ref.p = -1) | unit_id + YEAR, data = sunab_panel_all[YEAR >= 2020], vcov = ~ bank_id)
+
+es13_all <- rbindlist(list(
+  sunab_tidy(sunab_pre2012, "Pre 2012"),
+  sunab_tidy(sunab_2012_2019, "2012-2019"),
+  sunab_tidy(sunab_2020_2024, "2020-2024")
+))
+es13_all <- add_ref_point(es13_all, ref = -1L)
+es13_all <- es13_all[order(period, event_time)]
+
+g1 <- ggplot(es13_all, aes(x = event_time, y = estimate, group = period, color = period)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+  geom_line(linewidth = 0.8) +
+  geom_point(aes(shape = period), size = 2.2) +
+  geom_errorbar(aes(ymin = estimate - 1.96 * se, ymax = estimate + 1.96 * se), width = 0.2, linewidth = 0.4) +
+  scale_color_manual(values = c("Pre 2012" = "#1b9e77", "2012-2019" = "#d95f02", "2020-2024" = "#7570b3")) +
+  labs(
+    title = "Sun & Abraham: All Branch Deposits (Superimposed by Period)",
+    x = "Years Relative to First Closure",
+    y = "Event-time effect (log deposits)",
+    color = "Period",
+    shape = "Period"
+  ) +
+  theme_custom()
+g1
+
+if (isTRUE(save_figures)) {
+  ggsave(
+    filename = here::here("latex", "figures", paste0("sunab_total_deposits_", dat_suffix, ".png")),
+    plot = g1, width = 8, height = 6, bg = "transparent"
+  )
+}
+```
+
+### Sun & Abraham: consistent branch set by period
+
+The exhibit plots event-time coefficients from Sun & Abraham regressions of log(1 + deposits at branches that do not close in the cohort year), by period, superimposed. The unit of observation is bank–county–year. The sample is the same as in the previous exhibit (treated in ±3 year window, 50% never-treated). The dependent variable is log(1 + total deposits in branches that remain open through the cohort year). The RHS and fixed effects are as before. Each series is the estimated event-time effect for that period; bands are 95% confidence intervals. We also estimate a closure-intensity panel regression on exactly this sample (see below) so that figures and regression can be compared.
+
+```{r}
+sunab_consistent_pre2012   <- feols(log1p(deps_consistent) ~ sunab(cohort, YEAR, ref.p = -1) | unit_id + YEAR, data = sunab_panel_consistent[YEAR < 2012], vcov = ~ bank_id)
+sunab_consistent_2012_2019 <- feols(log1p(deps_consistent) ~ sunab(cohort, YEAR, ref.p = -1) | unit_id + YEAR, data = sunab_panel_consistent[YEAR >= 2012 & YEAR <= 2019], vcov = ~ bank_id)
+sunab_consistent_2020_2024 <- feols(log1p(deps_consistent) ~ sunab(cohort, YEAR, ref.p = -1) | unit_id + YEAR, data = sunab_panel_consistent[YEAR >= 2020], vcov = ~ bank_id)
+
+es_cons <- rbindlist(list(
+  sunab_tidy(sunab_consistent_pre2012, "Pre 2012"),
+  sunab_tidy(sunab_consistent_2012_2019, "2012-2019"),
+  sunab_tidy(sunab_consistent_2020_2024, "2020-2024")
+), fill = TRUE)
+es_cons <- add_ref_point(es_cons, ref = -1L)
+es_cons <- es_cons[order(period, event_time)]
+
+g2 <- ggplot(es_cons, aes(x = event_time, y = estimate, group = period, color = period)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+  geom_line(linewidth = 0.8) +
+  geom_point(aes(shape = period), size = 2.2) +
+  geom_errorbar(aes(ymin = estimate - 1.96 * se, ymax = estimate + 1.96 * se), width = 0.2, linewidth = 0.4) +
+  scale_color_manual(values = c("Pre 2012" = "#1b9e77", "2012-2019" = "#d95f02", "2020-2024" = "#7570b3")) +
+  labs(
+    title = "Sun & Abraham (Consistent Branch Set): Superimposed by Period",
+    x = "Years Relative to First Closure",
+    y = "Event-time effect",
+    color = "Period",
+    shape = "Period"
+  ) +
+  theme_custom()
+g2
+
+if (isTRUE(save_figures)) {
+  ggsave(
+    filename = here::here("latex", "figures", paste0("sunab_deposits_consistent_branch_set_", dat_suffix, ".png")),
+    plot = g2, width = 8, height = 6, bg = "transparent"
+  )
+}
+```
+
+### Closure-intensity regression on constant branch set
+
+We estimate the same closure-intensity panel specification as in the main bank–county regression (growth_on_total_t1 on closure_share and controls, with bank_id×YEAR and county×YEAR fixed effects), but restricted to the exact same bank–county–year sample used in the constant-branch-set Sun & Abraham figure above. This allows direct comparison of the closure_share coefficients with the main regression and with the event-study path.
+
+```{r}
+# Data created by code/v20260410/sample-construction/bank_county_year_sample_20260409.R
+reg_main_files <- list.files(data_path, pattern = "^reg_main_\\d{8}_\\d{6}\\.rds$", full.names = TRUE)
+if (!length(reg_main_files)) {
+  stop("No reg_main_*.rds in data/. Run code/v20260410/sample-construction/bank_county_year_sample_20260409.R first.")
+}
+reg_main <- readRDS(reg_main_files[which.max(file.mtime(reg_main_files))])
+reg_main[,closed_any:=ifelse(closure_share>0,1,0)]
+setDT(reg_main)
+
+setFixest_fml(
+  ..fixef    = ~ bank_id^YEAR + county^YEAR,
+  ..controls = ~ log1p(total_deps_bank_county_t1) + log1p(n_remaining_branches) + mkt_share_county_t1,
+  ..depvar   = ~ growth_on_total_t1
+)
+setFixest_etable(signif.code = c("***" = 0.01, "**" = 0.05, "*" = 0.1), se.below = TRUE)
+
+reg_consistent_panel <- merge(
+  sunab_panel_consistent[, .(bank_id, county, YEAR)],
+  reg_main,
+  by = c("bank_id", "county", "YEAR")
+)
+
+r_consistent_period <- list(
+  "All"       = feols(..depvar ~ closed_any + ..controls | ..fixef, data = reg_consistent_panel,                     vcov = ~ bank_id),
+  "Pre 2012"  = feols(..depvar ~ closed_any + ..controls | ..fixef, data = reg_consistent_panel[YEAR < 2012],          vcov = ~ bank_id),
+  "2012-2019" = feols(..depvar ~ closed_any + ..controls | ..fixef, data = reg_consistent_panel[YEAR %in% 2012:2019], vcov = ~ bank_id),
+  "2020-2024" = feols(..depvar ~ closed_any + ..controls | ..fixef, data = reg_consistent_panel[YEAR >= 2020],         vcov = ~ bank_id)
+)
+etable(r_consistent_period)
+```
+
+```{r}
+# Sample alignment: regression uses the intersection of constant-branch SunAb panel and reg_main.
+# All regression rows must be in the SunAb panel; some SunAb rows may lack reg_main (e.g. clean-network filter).
+stopifnot(all(
+  reg_consistent_panel[, paste(bank_id, county, YEAR)] %in%
+  sunab_panel_consistent[, paste(bank_id, county, YEAR)]
+))
+# Report overlap for transparency
+cat("Constant-branch SunAb panel rows:", nrow(sunab_panel_consistent), "\n")
+cat("Rows also in reg_main (regression sample):", nrow(reg_consistent_panel), "\n")
+```
+
+```{r}
+export_table_consistent_period <- FALSE
+if (isTRUE(save_tables) && isTRUE(export_table_consistent_period)) {
+  table_tex_consistent <- etable(r_consistent_period, tex = TRUE)
+  writeLines(
+    table_tex_consistent,
+    con = here::here("latex", "tables", paste0("bank_cty_consistent_regressions_", dat_suffix, ".tex"))
+  )
+}
+```
+
+### Sun & Abraham: number of remaining branches
+
+The exhibit plots event-time coefficients from a single Sun & Abraham regression of log(1 + number of remaining branches) on cohort-time dummies. The unit of observation is bank–county–year. Treated units are bank–counties with at least one closure and no closure that was a recently acquired branch (any_closure_prev_owner_other_3y == 0); the sample is restricted to the ±3 year window or sampled never-treated. The dependent variable is log(1 + count of branches that remain open and have deposits at t-1 and t+1). The RHS is the Sun & Abraham cohort × event-time aggregation with reference at -1; fixed effects are unit and year; standard errors are clustered by bank. The plot shows the estimated event-time path with 95% confidence interval.
+
+```{r}
+first_closure <- bank_cty_yr[any_closure_t == 1L & any_closure_prev_owner_other_3y == 0L, .(cohort = min(YEAR)), by = .(bank_id, county)]
+reg_sunab <- merge(
+  bank_cty_yr[, .(bank_id, county, YEAR, total_deps_bank_county_t1, n_remaining_branches, any_closure_t)],
+  first_closure,
+  by = c("bank_id", "county"),
+  all.x = TRUE
+)
+set.seed(123)
+never_bc <- unique(reg_sunab[is.na(cohort), .(bank_id, county)])
+keep_never <- never_bc[sample(.N, max(1, floor(.N * params$never_treated_share)))]
+reg_sunab <- reg_sunab[
+  (!is.na(cohort) & YEAR >= cohort - 3L & YEAR <= cohort + 3L) |
+  (is.na(cohort) & paste(bank_id, county) %in% paste(keep_never$bank_id, keep_never$county))
+]
+reg_sunab[is.na(cohort), cohort := 10000L]
+reg_sunab[, unit_id := .GRP, by = .(bank_id, county)]
+
+sunab_model <- feols(
+  log1p(n_remaining_branches) ~ sunab(cohort, YEAR, ref.p = -1) | unit_id + YEAR,
+  data = reg_sunab,
+  vcov = ~ bank_id
+)
+g3 <- ggiplot(sunab_model,
+  main = "Sun & Abraham: Event Study (sampled never-treated controls)",
+  xlab = "Years Relative to First Closure",
+  ylab = "log(1 + remaining branches)"
+)
+g3
+
+if (isTRUE(save_figures)) {
+  ggsave(
+    filename = here::here("latex", "figures", paste0("sunab_n_remaining_branches_", dat_suffix, ".png")),
+    plot = g3, width = 8, height = 6, bg = "transparent"
+  )
+}
+```

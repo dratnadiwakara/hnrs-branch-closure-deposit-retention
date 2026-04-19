@@ -1,0 +1,186 @@
+---
+title: "Parallel Lending Regressions: Deposits, HMDA Mortgages, CRA Small Business Loans"
+format: html
+type: source
+execute:
+  warning: false
+  message: false
+---
+
+## Setup
+
+```{r}
+rm(list = ls())
+
+library(data.table)
+library(fixest)
+library(here)
+
+data_path <- here::here("data")
+
+save_tables <- FALSE
+dat_suffix  <- format(Sys.time(), "%Y%m%d")
+```
+
+## Data loading
+
+This section loads the bank-county-year lending panel constructed by
+`code/v20260410/sample-construction/build_lending_panel_20260414.R`.
+The unit of observation is a bank-county-year for incumbent banks (banks that
+do not close a branch in the county-year). The panel contains three parallel
+outcome variables:
+
+- `dep_growth`: bank-county-year deposit growth, computed as
+  (total surviving-branch deposits at t+1 − t−1) / (t−1 deposits)
+- `hmda_growth`: HMDA mortgage origination growth at t+1 vs t−1,
+  normalized by t−1 originations (whole dollars, `action_taken = '1'`)
+- `cra_growth`: CRA small business loan origination growth at t+1 vs t−1
+  (disclosure panel, `table_id = 'D1-1'`, county total), normalized by t−1
+
+All three growth variables are winsorized at [2.5%, 97.5%]. The treatment
+variable `share_deps_closed` is the county-year share of t−1 deposits held at
+branches being closed by *other* (competitor) banks — the same measure used in
+`branch_year_regression_20260409.qmd`.
+
+```{r}
+# Data created by code/v20260410/sample-construction/build_lending_panel_20260414.R
+panel_files <- list.files(
+  data_path,
+  pattern = "^lending_panel_\\d{8}\\.rds$",
+  full.names = TRUE
+)
+if (!length(panel_files)) {
+  stop("No lending_panel_*.rds found in data/. Run build_lending_panel_20260414.R first.")
+}
+panel_file <- panel_files[which.max(file.mtime(panel_files))]
+message("Loading: ", basename(panel_file))
+
+dt <- readRDS(panel_file)
+setDT(dt)
+```
+
+## Sample summary
+
+```{r}
+message("Total bank-county-years: ",    nrow(dt))
+message("Distinct bank-counties: ",     uniqueN(dt[, .(CERT, county)]))
+message("Year range: ",                 min(dt$YEAR, na.rm = TRUE), "-", max(dt$YEAR, na.rm = TRUE))
+message("dep_growth  non-NA: ",  sum(!is.na(dt$dep_growth)))
+message("hmda_growth non-NA: ",  sum(!is.na(dt$hmda_growth)))
+message("cra_growth  non-NA: ",  sum(!is.na(dt$cra_growth)))
+```
+
+## Fixest global configuration
+
+Fixed effects mirror the branch-year specification in
+`branch_year_regression_20260409.qmd` (`UNINUMBR + state_yr + bank_yr`), but
+aggregated to bank-county level: `bank_county_id` replaces the branch fixed
+effect, capturing all time-invariant bank-county characteristics.
+
+Controls are the same county-level controls; `log1p(dep_lag1_aligned)` is
+dropped because it is a branch-level variable unavailable at this aggregation.
+
+```{r}
+setFixest_fml(
+  ..fixef    = ~ bank_county_id + state_yr + bank_yr,
+  ..controls = ~ log1p(banks_county_lag1) +
+    county_dep_growth_t4_t1 +
+    log_population_density +
+    lag_county_deposit_hhi +
+    lag_establishment_gr +
+    lag_payroll_gr +
+    lag_hmda_mtg_amt_gr +
+    lag_cra_loan_amount_amt_lt_1m_gr +
+    lmi
+)
+
+setFixest_etable(
+  signif.code = c("***" = 0.01, "**" = 0.05, "*" = 0.1),
+  se.below = TRUE
+)
+```
+
+## Table 1: Baseline effect of competitor branch closures on incumbent bank outcomes
+
+Three parallel regressions — one per outcome — across three sample periods
+(pre-2012, 2012–2024, 2012–2019). The treatment is `share_deps_closed`, the
+county-year share of deposits at closing competitor branches. Fixed effects:
+bank-county, state-year, bank-year. Standard errors clustered at the
+bank-county level.
+
+The pre-2012 vs 2012–2024 split tests Phil Strahan's conjecture: incumbents
+should gain deposits *and* increase local lending in the early period (when
+branch closures meaningfully reduce competitor local presence), but neither
+effect should persist in recent years as deposit and lending relationships
+become less branch-dependent.
+
+```{r}
+periods <- list(
+  "Pre 2012"  = dt[YEAR < 2012],
+  "2012-2024" = dt[YEAR >= 2012],
+  "2012-2019" = dt[YEAR %in% 2012:2019]
+)
+
+r_dep <- lapply(periods, function(d) {
+  feols(dep_growth ~ share_deps_closed + ..controls | ..fixef,
+        data = d, vcov = ~bank_county_id)
+})
+names(r_dep) <- names(periods)
+
+r_hmda <- lapply(periods, function(d) {
+  feols(hmda_growth ~ share_deps_closed + ..controls | ..fixef,
+        data = d, vcov = ~bank_county_id)
+})
+names(r_hmda) <- names(periods)
+
+r_cra <- lapply(periods, function(d) {
+  feols(cra_growth ~ share_deps_closed + ..controls | ..fixef,
+        data = d, vcov = ~bank_county_id)
+})
+names(r_cra) <- names(periods)
+```
+
+### Deposits
+
+```{r}
+etable(r_dep)
+```
+
+### HMDA mortgage originations
+
+```{r}
+etable(r_hmda)
+```
+
+### CRA small business loans
+
+Note: CRA disclosure is filed only by banks above the regulatory asset threshold
+(~$376M in recent years), so this regression covers a narrower set of banks
+than the deposit and HMDA columns.
+
+```{r}
+etable(r_cra)
+```
+
+### Combined (all nine models side by side)
+
+```{r}
+r_all <- c(r_dep, r_hmda, r_cra)
+names(r_all) <- c(
+  paste0("Dep: ", names(periods)),
+  paste0("HMDA: ", names(periods)),
+  paste0("CRA: ", names(periods))
+)
+
+etable(r_all, order = "share_deps_closed")
+
+export_table <- FALSE
+
+if (isTRUE(save_tables) && isTRUE(export_table)) {
+  table_tex <- etable(r_all, order = "share_deps_closed", tex = TRUE)
+  writeLines(
+    table_tex,
+    con = here::here("latex", "tables", paste0("lending_parallel_", dat_suffix, ".tex"))
+  )
+}
+```
