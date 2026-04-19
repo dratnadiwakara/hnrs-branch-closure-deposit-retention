@@ -109,6 +109,28 @@
 - Test Corollary 1 (geographic reallocation): do high-`has_app` closing banks increase lending in OTHER counties post-closure? Needs bank-level panel across all counties.
 - pyfixest 1.2 event study has boundary artifact — flag to coauthors that R version is canonical for that figure.
 
+## 2026-04-19
+
+### Done
+- Rewrote `docs/snapshots/20260418-08-main-regressions/index.md` twice: first pass added Mean(DV)/SD(treatment)/fenced-code-block tables; second pass applied updated skill format (no bold coefficients, FE indicator rows, SE clustering row, Adj. R² row)
+- Computed Mean(DV) and SD(treatment) for Tables 1–6 via `stats_extract.R` (temp script, now deleted) and `stats_extract_cra.R` (temp, deleted)
+- Computed Adj. R² for Table 7 by re-running feols on `data/reg_main_20260418.rds`: All=0.354, Pre-2012=0.403, 2012-2024=0.320, 2012-2019=0.287
+
+### Dead ends
+- CRA DuckDB column is `county` (not `county_code`) and `county_fips` on disclosure_panel; crosswalk column is `rssdid` (not `rssd_id`) on transmittal_panel — the original `stats_extract.R` had wrong column names, took 3 fixes to get right query
+- `Rscript -e "..."` segfaults on complex multi-library scripts in this shell — write to file and run always
+- `lending_panel_20260418.rds` has bank-county-year rows (529k rows, 64k unique county-years) — cannot use directly for county-year regressions without aggregating; dep_growth is bank-level not county-level
+
+### Lessons
+- Correct CRA SQL: `FROM disclosure_panel d JOIN transmittal_panel t ON d.respondent_id=t.respondent_id AND d.agency_code=t.agency_code AND d.year=t.year` using `d.county_fips AS county` and `CAST(t.rssdid AS BIGINT) AS rssdid`. Must also filter `CAST(d.action_taken AS INTEGER)=1`.
+- Mean(DV)/SD(treatment) stats from full zip panel (no demographics filter) slightly overcount vs regression N (~10% gap due to `!is.na(sophisticated)` filter applied in T1/T2 regressions) — sufficient for snapshot but not exact regression-sample stats
+- Adj. R² for Tables 1–6 requires full pipeline re-run (zip/county panel rebuild + HMDA/CRA DuckDB queries) — not computed this session, left as `—` in snapshot
+- Updated skill format: coefficients plain (no bold), footer order is N → FE indicators → SE → Mean(DV) → SD(treatment) → Adj. R² → Within R²; FE indicators are one row per FE type with Yes/No per column
+
+### Next
+- Run `09_anchored_regressions.R` with `r2(model, "ar2")` extraction to fill in Adj. R² for Tables 1–6
+- Interact `closure_share × has_app` in Section 1.1 to test Prediction 1 directly
+
 ## 2026-04-18 (session 3)
 
 ### Done

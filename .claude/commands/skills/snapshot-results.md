@@ -110,11 +110,15 @@ Number each section. Put variable definitions **directly above** each table or f
 ```
 | col1 | col2 | col3 |
 |------|------|------|
-| **0.0951***  | 0.0060 | ... |
+| 0.0951***  | 0.0060 | ... |
 | (0.0114) | (0.0082) | ... |
 | N | 1234 | 1234 | ... |
+| Zip FE | Yes | Yes | ... |
+| County×Year FE | Yes | Yes | ... |
+| SE | Zip | Zip | ... |
 | Mean(DV) | 0.042 | 0.038 | ... |
 | SD(treatment) | 0.183 | 0.191 | ... |
+| Adj. R² | 0.15 | 0.11 | ... |
 | Within R² | 0.12 | 0.08 | ... |
 ```
 *Note: \*\*\* p<0.01, \*\* p<0.05, \* p<0.10*
@@ -122,9 +126,13 @@ Number each section. Put variable definitions **directly above** each table or f
 ---
 ```
 
-- **Bold significant treatment coefficients**: `**0.0951***`; leave insignificant ones plain: `0.0060`.
+- Coefficients: plain text with stars only (`0.0951***`). Do not bold — stars already signal significance.
 - SE row: separate row with `(se)` directly below coefficient row; first cell blank — no "se" label.
-- Footer rows order: **N → Mean(DV) → SD(treatment) → Within R²** (Mean and SD go after N, before R²).
+- Footer rows order: **N → FE indicators → SE clustering → Mean(DV) → SD(treatment) → Adj. R² → Within R²**
+- **FE indicators**: one row per fixed effect (e.g., `Zip FE`, `County×Year FE`) with `Yes`/`No` per column. For R: extract from etable .tex output — do NOT strip these rows during parsing. For Python: derive from spec in header block and add manually.
+- **SE clustering**: one row labeled `SE` with clustering level per column (e.g., `Zip`, `Bank`). For R: extract from etable vcov field. For Python: add manually from spec.
+- **Adj. R²**: full (not within) adjusted R² — `r2(model, "ar2")` in fixest. Row label: `Adj. R²`.
+- **Within R²**: keep as second R² row. Row label: `Within R²`.
 - `Mean(DV)`: mean of dependent variable in that regression's sample (after all filters/dropna), rounded to 3 dp. Use actual variable name if cleaner: `Mean(gr_branch)`.
 - `SD(treatment)`: SD of the key treatment variable (not controls) in same sample, rounded to 3 dp. Use actual variable name if cleaner: `SD(share_deps_closed)`.
 - Compute from the exact `data=` subset passed to `feols()`:
