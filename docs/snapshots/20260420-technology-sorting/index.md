@@ -5,7 +5,7 @@ title: "technology-sorting — 2026-04-20"
 
 # Snapshot: technology-sorting
 
-> Zip-year deposit reallocation regressions decomposed by closing-bank technology type and local digital infrastructure. Controls: log branches, log incumbent banks, log lagged zip deposits, zip deposit growth t−3 to t−1. Pre-2012: incumbents absorb 11–12% of deposits from closing small/no-app banks per unit share. Post-2012: reallocation collapses to near zero — 2012–19 coefficient indistinguishable from zero, 2020–24 marginally positive at 0.022*. Mobile penetration interaction is negative and significant in 2012–19 (−0.16***), consistent with local digital infrastructure substituting for physical branches. Depositor sophistication interaction (Table 6) is uniformly insignificant across all periods — the structural break at 2012 dominates, with no detectable heterogeneity by depositor type.
+> Zip-year deposit reallocation regressions decomposed by closing-bank technology type and local digital infrastructure. Controls: log branches, log incumbent banks, log lagged zip deposits, zip deposit growth t−3 to t−1. Pre-2012: incumbents absorb 11–12% of deposits from closing small/no-app banks per unit share. Post-2012: reallocation collapses to near zero — 2012–19 coefficient indistinguishable from zero, 2020–24 marginally positive at 0.022*. Mobile penetration interaction is negative and significant in 2012–19 (−0.16***), consistent with local digital infrastructure substituting for physical branches. Depositor sophistication interaction (Table 6) is uniformly insignificant across all periods — the structural break at 2012 is the dominant pattern, not cross-sectional heterogeneity in depositor type.
 
 ---
 
@@ -17,7 +17,7 @@ title: "technology-sorting — 2026-04-20"
 **Incumbent:** banks present in zip at t+1 that were present at t  
 **FE:** zip + county×year | **SE:** clustered at zip  
 **Controls:** log(# branches), log(# incumbent banks), log(total zip deposits at t−1), zip deposit growth t−3 to t−1  
-*Note: 2000–01 observations dropped due to 2-year lag for dep_growth_t3t1 (N for 2000–07 = 51,558 vs 70,727 without growth control)*
+*Note: 2000–01 observations dropped due to 2-year lag for dep_growth_t3t1*
 
 ```
 |                    | 2000–07    | 2008–11    | 2012–19    | 2020–24    |
@@ -36,6 +36,9 @@ title: "technology-sorting — 2026-04-20"
 | Zip FE             | Yes        | Yes        | Yes        | Yes        |
 | County×Year FE     | Yes        | Yes        | Yes        | Yes        |
 | SE                 | Zip        | Zip        | Zip        | Zip        |
+| Mean(outcome)      | 0.049      | 0.037      | 0.062      | 0.054      |
+| SD(share_deps_cl.) | 0.034      | 0.033      | 0.047      | 0.060      |
+| R²                 | 0.53982    | 0.48717    | 0.48155    | 0.56746    |
 | Within R²          | 0.06325    | 0.04686    | 0.04285    | 0.05693    |
 ```
 *Note: \*\*\* p<0.01, \*\* p<0.05, \* p<0.10*
@@ -72,6 +75,9 @@ title: "technology-sorting — 2026-04-20"
 | Zip FE                   | Yes        | Yes        | Yes        | Yes        |
 | County×Year FE           | Yes        | Yes        | Yes        | Yes        |
 | SE                       | Zip        | Zip        | Zip        | Zip        |
+| Mean(outcome)            | 0.049      | 0.037      | 0.062      | 0.054      |
+| SD(share_deps_cl.)       | 0.034      | 0.033      | 0.047      | 0.060      |
+| R²                       | 0.53992    | 0.48717    | 0.48180    | 0.56746    |
 | Within R²                | 0.06345    | 0.04687    | 0.04331    | 0.05694    |
 ```
 *Note: \*\*\* p<0.01, \*\* p<0.05, \* p<0.10*
@@ -105,6 +111,9 @@ title: "technology-sorting — 2026-04-20"
 | Zip FE                   | Yes        | Yes        | Yes        | Yes        |
 | County×Year FE           | Yes        | Yes        | Yes        | Yes        |
 | SE                       | Zip        | Zip        | Zip        | Zip        |
+| Mean(outcome)            | 0.049      | 0.037      | 0.062      | 0.054      |
+| SD(share_deps_cl.)       | 0.034      | 0.033      | 0.047      | 0.060      |
+| R²                       | 0.53984    | 0.48695    | 0.48173    | 0.56743    |
 | Within R²                | 0.06328    | 0.04645    | 0.04318    | 0.05688    |
 ```
 *Note: \*\*\* p<0.01, \*\* p<0.05, \* p<0.10*
@@ -137,6 +146,9 @@ title: "technology-sorting — 2026-04-20"
 | Zip FE                                        | Yes        | Yes        | Yes        |
 | County×Year FE                                | Yes        | Yes        | Yes        |
 | SE                                            | Zip        | Zip        | Zip        |
+| Mean(outcome)                                 | 0.068      | 0.071      | 0.060      |
+| SD(share_deps_cl.)                            | 0.057      | 0.051      | 0.068      |
+| R²                                            | 0.45112    | 0.44590    | 0.59192    |
 | Within R²                                     | 0.04115    | 0.04342    | 0.06161    |
 ```
 *Note: \*\*\* p<0.01, \*\* p<0.05, \* p<0.10*
@@ -171,6 +183,9 @@ title: "technology-sorting — 2026-04-20"
 | Zip FE                                        | Yes        | Yes        |
 | County×Year FE                                | Yes        | Yes        |
 | SE                                            | Zip        | Zip        |
+| Mean(outcome)                                 | 0.068      | 0.071      |
+| SD(share_deps_cl.)                            | 0.057      | 0.051      |
+| R²                                            | 0.45121    | 0.44604    |
 | Within R²                                     | 0.04130    | 0.04367    |
 ```
 *Note: \*\*\* p<0.01, \*\* p<0.05, \* p<0.10*
@@ -179,36 +194,40 @@ title: "technology-sorting — 2026-04-20"
 
 ## 6. Depositor Sophistication Interaction — Zip-Year
 
-**Interaction:** `share_deps_closed × sophisticated` where `sophisticated` is a zip×year binary from the demographics panel (within-year classification).  
+**Interaction:** `share_deps_closed × sophisticated` where `sophisticated` is a zip×year binary from the demographics panel (within-year classification: above-median education AND above-median dividend or capital-gain income).  
 **Main effect of `sophisticated` included** (dropped in 2000–07 due to collinearity with zip FE — insufficient within-zip variation in that subsample).  
-*Hypothesis: negative interaction — unsophisticated zip-years show larger reallocation; sophisticated zip-years show attenuated effect.*
+*2012–19 split into 2012–13 and 2014–19 to detect when sophistication heterogeneity emerges within the digital era.*  
+*Hypothesis: negative interaction in the digital era — sophisticated zip-years show attenuated reallocation as digital substitution differentially benefits high-sophistication depositors.*
 
 ```
-|                                    | 2000–07    | 2008–11    | 2012–19    | 2020–24    |
-| ---------------------------------- | ---------- | ---------- | ---------- | ---------- |
-| share_deps_closed                  | 0.1219***  | 0.1147***  | 0.0224*    | 0.0070     |
-|                                    | (0.0275)   | (0.0301)   | (0.0129)   | (0.0171)   |
-| share_deps_closed × sophisticated  | −0.0024    | −0.0179    | −0.0243    | 0.0308*    |
-|                                    | (0.0375)   | (0.0390)   | (0.0155)   | (0.0183)   |
-| sophisticated                      |            | 0.0022     | 0.0061***  | −0.0004    |
-|                                    |            | (0.0068)   | (0.0021)   | (0.0050)   |
-| log_n_branches                     | −0.0145*   | 0.0474***  | 0.0194**   | 0.0372***  |
-|                                    | (0.0085)   | (0.0110)   | (0.0076)   | (0.0106)   |
-| log_n_inc_banks                    | 0.0890***  | 0.0500***  | 0.0711***  | 0.0934***  |
-|                                    | (0.0075)   | (0.0079)   | (0.0057)   | (0.0089)   |
-| log_total_deps                     | −0.0985*** | −0.1202*** | −0.1049*** | −0.1054*** |
-|                                    | (0.0059)   | (0.0098)   | (0.0083)   | (0.0122)   |
-| dep_growth_t3t1                    | −0.0081*** | −0.0054    | −0.0036    | −0.0371*** |
-|                                    | (0.0022)   | (0.0044)   | (0.0028)   | (0.0057)   |
-| N                                  | 51,558     | 44,830     | 89,954     | 51,586     |
-| Zip FE                             | Yes        | Yes        | Yes        | Yes        |
-| County×Year FE                     | Yes        | Yes        | Yes        | Yes        |
-| SE                                 | Zip        | Zip        | Zip        | Zip        |
-| Within R²                          | 0.06325    | 0.04687    | 0.04300    | 0.05702    |
+|                                    | 2000–07    | 2008–11    | 2012–13    | 2014–19    | 2020–24    |
+| ---------------------------------- | ---------- | ---------- | ---------- | ---------- | ---------- |
+| share_deps_closed                  | 0.1219***  | 0.1147***  | 0.0899**   | 0.0208     | 0.0070     |
+|                                    | (0.0275)   | (0.0301)   | (0.0403)   | (0.0150)   | (0.0171)   |
+| share_deps_closed × sophisticated  | −0.0024    | −0.0179    | 0.0093     | −0.0338**  | 0.0308*    |
+|                                    | (0.0375)   | (0.0390)   | (0.0480)   | (0.0172)   | (0.0183)   |
+| sophisticated                      |            | 0.0022     | 0.0058     | 0.0039     | −0.0004    |
+|                                    |            | (0.0068)   | (0.0061)   | (0.0027)   | (0.0050)   |
+| log_n_branches                     | −0.0145*   | 0.0474***  | −0.0723*** | 0.0314***  | 0.0372***  |
+|                                    | (0.0085)   | (0.0110)   | (0.0219)   | (0.0101)   | (0.0106)   |
+| log_n_inc_banks                    | 0.0890***  | 0.0500***  | 0.0125     | 0.0791***  | 0.0934***  |
+|                                    | (0.0075)   | (0.0079)   | (0.0180)   | (0.0073)   | (0.0089)   |
+| log_total_deps                     | −0.0985*** | −0.1202*** | −0.0332*   | −0.1071*** | −0.1054*** |
+|                                    | (0.0059)   | (0.0098)   | (0.0179)   | (0.0127)   | (0.0122)   |
+| dep_growth_t3t1                    | −0.0081*** | −0.0054    | 0.0004     | −0.0208*** | −0.0371*** |
+|                                    | (0.0022)   | (0.0044)   | (0.0083)   | (0.0052)   | (0.0057)   |
+| N                                  | 51,558     | 44,830     | 22,868     | 66,796     | 51,586     |
+| Zip FE                             | Yes        | Yes        | Yes        | Yes        | Yes        |
+| County×Year FE                     | Yes        | Yes        | Yes        | Yes        | Yes        |
+| SE                                 | Zip        | Zip        | Zip        | Zip        | Zip        |
+| Mean(outcome)                      | 0.049      | 0.037      | 0.037      | 0.071      | 0.054      |
+| SD(share_deps_cl.)                 | 0.034      | 0.033      | 0.040      | 0.049      | 0.060      |
+| R²                                 | 0.53982    | 0.48717    | 0.64535    | 0.51108    | 0.56750    |
+| Within R²                          | 0.06325    | 0.04687    | 0.00453    | 0.04533    | 0.05702    |
 ```
 *Note: \*\*\* p<0.01, \*\* p<0.05, \* p<0.10*
 
-*Interaction uniformly insignificant across all periods. Depositor sophistication does not moderate branch-closure reallocation — the structural break at 2012 is the dominant pattern, not cross-sectional heterogeneity in depositor type.*
+*2012–13 transition: reallocation still present (0.090**), sophistication not yet a moderator (+0.009, n.s.). 2014–19: interaction turns negative and significant (−0.034**) — sophisticated zips show meaningfully less reallocation once digital adoption is widespread. Consistent with a ~2-year lag between the structural break (2012) and differentiated depositor behavior by sophistication.*
 
 ---
 

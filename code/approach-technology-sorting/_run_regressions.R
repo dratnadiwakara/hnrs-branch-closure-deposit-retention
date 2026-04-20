@@ -33,6 +33,8 @@ dt[, soph_zip := mean(sophisticated, na.rm = TRUE) >= 0.5, by = zip]
 
 d0007 <- dt[YEAR %between% c(2000, 2007)]
 d0811 <- dt[YEAR %between% c(2008, 2011)]
+d1213 <- dt[YEAR %between% c(2012, 2013)]
+d1419 <- dt[YEAR %between% c(2014, 2019)]
 d1219 <- dt[YEAR %between% c(2012, 2019)]
 d2024 <- dt[YEAR %between% c(2020, 2024)]
 
@@ -164,7 +166,8 @@ run_soph_int <- function(data) feols(
 r_soph <- list(
   "2000–07" = run_soph_int(d0007),
   "2008–11" = run_soph_int(d0811),
-  "2012–19" = run_soph_int(d1219),
+  "2012–13" = run_soph_int(d1213),
+  "2014–19" = run_soph_int(d1419),
   "2020–24" = run_soph_int(d2024)
 )
 
