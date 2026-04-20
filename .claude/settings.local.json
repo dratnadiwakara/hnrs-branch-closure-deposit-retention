@@ -45,7 +45,10 @@
       "Write(**.tex)",
       "Bash(cmd.exe /c \"dir /AL C:\\\\Users\\\\dimut\\\\OneDrive\\\\github\\\\depositor-discipline-cbo\\\\.claude\\\\commands\")",
       "Bash(cmd.exe *)",
-      "Bash(powershell *)"
+      "Bash(powershell *)",
+      "Bash(\"C:/Program Files/R/R-4.5.3/bin/Rscript.exe\" code/approach-technology-sorting/01_build_zip_tech_sample_20260419.R)",
+      "Bash(\"C:/Program Files/R/R-4.5.3/bin/Rscript.exe\" -e \".libPaths\\(\\)\")",
+      "Read(//c/Users/dimut/AppData/Local/R/win-library/**)"
     ],
     "deny": [
       "Bash(rm -rf *)",

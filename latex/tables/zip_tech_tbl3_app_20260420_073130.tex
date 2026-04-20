@@ -1,0 +1,30 @@
+\begingroup
+\centering
+\begin{tabular}{lcccc}
+   \tabularnewline \midrule \midrule
+   Dependent Variable: & \multicolumn{4}{c}{outcome}\\
+   Model:                        & (1)             & (2)             & (3)             & (4)\\  
+   \midrule
+   \emph{Variables}\\
+   share\_deps\_closed\_app      & 0.2640          & 0.1236$^{**}$   & 0.0071          & -0.0083\\   
+                                 & (0.1731)        & (0.0540)        & (0.0128)        & (0.0161)\\   
+   share\_deps\_closed\_noapp    & 0.1159$^{***}$  & 0.0786$^{***}$  & 0.0684$^{***}$  & -0.0500\\   
+                                 & (0.0156)        & (0.0286)        & (0.0239)        & (0.0452)\\   
+   log\_n\_branches              & -0.1155$^{***}$ & -0.0623$^{***}$ & -0.0639$^{***}$ & -0.0697$^{***}$\\   
+                                 & (0.0054)        & (0.0090)        & (0.0056)        & (0.0089)\\   
+   log\_n\_inc\_banks            & 0.0743$^{***}$  & 0.0310$^{***}$  & 0.0595$^{***}$  & 0.0614$^{***}$\\   
+                                 & (0.0056)        & (0.0079)        & (0.0053)        & (0.0079)\\   
+   \midrule
+   \emph{Fixed-effects}\\
+   zip                           & Yes             & Yes             & Yes             & Yes\\  
+   county\_yr                    & Yes             & Yes             & Yes             & Yes\\  
+   \midrule
+   \emph{Fit statistics}\\
+   Observations                  & 70,727          & 44,953          & 89,982          & 51,601\\  
+   R$^2$                         & 0.46458         & 0.46799         & 0.46041         & 0.54357\\  
+   Within R$^2$                  & 0.01424         & 0.00289         & 0.00385         & 0.00456\\  
+   \midrule \midrule
+   \multicolumn{5}{l}{\emph{Clustered (zip) standard-errors in parentheses}}\\
+   \multicolumn{5}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
+\end{tabular}
+\par\endgroup

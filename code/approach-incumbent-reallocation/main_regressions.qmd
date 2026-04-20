@@ -1,0 +1,585 @@
+---
+title: "Branch Closures, Deposit Retention, and the Credit Channel — Main Regressions"
+author: "Dimuthu Ratnadiwakara, Philip Strahan, Charlotte, Rajesh"
+date: today
+format: html
+execute:
+  warning: false
+  message: false
+  output: false
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup}
+rm(list=ls())
+library(data.table)
+library(fixest)
+library(duckdb)
+library(stringr)
+library(readxl)
+library(ggplot2)
+library(here)
+
+```
+
+
+## Data Paths
+
+Edit these paths before running.
+
+```{r paths}
+CLOSURE_PANEL  <- "C:/Users/dimut/OneDrive/data/closure_opening_data_simple.rds"
+HMDA_DB        <- "C:/empirical-data-construction/hmda/hmda.duckdb"
+CRA_DB         <- "C:/empirical-data-construction/cra/cra.duckdb"
+COUNTY_CTRL    <- "C:/Users/dimut/OneDrive/data/nrs_branch_closure/county_controls_panel.rds"
+ZIP_DEMO       <- "C:/Users/dimut/OneDrive/data/nrs_branch_closure/zip_demographics_panel.rds"
+TRACT_ZIP_XW   <- here("data/raw/tract_zip_122019.xlsx")
+REG_MAIN_DATA  <- here("data")   # folder containing reg_main_*.rds and sunab_panel_consistent_*.rds
+```
+
+## Helpers
+
+```{r helpers}
+wins <- function(x, lo = 0.025, hi = 0.975) {
+  q <- quantile(x, c(lo, hi), na.rm = TRUE)
+  pmin(pmax(x, q[1]), q[2])
+}
+
+load_latest <- function(folder, pattern) {
+  files <- list.files(folder, pattern = pattern, full.names = TRUE)
+  if (!length(files)) stop("No file matching '", pattern, "' in ", folder)
+  readRDS(files[which.max(file.mtime(files))])
+}
+
+sunab_tidy <- function(model, label) {
+  ct <- as.data.table(coeftable(model), keep.rownames = "term")
+  ct <- ct[grepl("sunab\\(|::", term)]
+  ct[, event_time := as.integer(gsub(".*?(-?\\d+)\\D*$", "\\1", term))]
+  ct[, `:=`(estimate = Estimate, se = `Std. Error`, period = label)]
+  ct[, .(period, event_time, estimate, se)]
+}
+
+add_ref_point <- function(es_dt, ref = -1L) {
+  refs <- unique(es_dt[, .(period)])
+  refs[, `:=`(event_time = ref, estimate = 0, se = 0)]
+  rbindlist(list(es_dt, refs), fill = TRUE) |> setorder(period, event_time)
+}
+```
+
+
+## 1. Load and Prepare Closure Panel
+
+```{r load-closure}
+#| output: false
+
+raw <- setDT(readRDS(CLOSURE_PANEL))
+raw[, county   := formatC(as.integer(STCNTYBR), width = 5, flag = "0")]
+raw[, zip      := formatC(as.integer(ZIPBR),    width = 5, flag = "0")]
+raw[, YEAR     := as.integer(YEAR)]
+raw[, closed   := as.integer(fifelse(is.na(closed), 0, closed))]
+raw[, DEPSUMBR := as.numeric(DEPSUMBR)]
+raw[, RSSDID   := suppressWarnings(as.numeric(RSSDID))]
+
+setorder(raw, UNINUMBR, YEAR)
+raw[, dep_lag1  := shift(DEPSUMBR, n = 1L, type = "lag"),  by = UNINUMBR]
+raw[, yr_lag1   := shift(YEAR,     n = 1L, type = "lag"),  by = UNINUMBR]
+raw[, dep_lead1 := shift(DEPSUMBR, n = 1L, type = "lead"), by = UNINUMBR]
+raw[, yr_lead1  := shift(YEAR,     n = 1L, type = "lead"), by = UNINUMBR]
+raw[, dep_lag1_a  := fifelse(yr_lag1  == YEAR - 1, dep_lag1,  NA_real_)]
+raw[, dep_lead1_a := fifelse(yr_lead1 == YEAR + 1, dep_lead1, NA_real_)]
+
+cert_rssd <- raw[!is.na(RSSDID) & RSSDID != 0,
+  .(RSSDID = as.integer(RSSDID[1])), by = .(CERT, YEAR)]
+invisible(NULL)
+```
+
+## 2. Zip-Year Panel
+
+Incumbent = bank with no closures in (zip, YEAR). Outcome window: 1-year (t → t+1), denominator = total zip deposits at t−1.
+
+```{r zip-panel}
+bank_zip <- raw[, .(n_closes = sum(closed, na.rm = TRUE)), by = .(CERT, zip, YEAR)]
+bank_zip[, is_inc := as.integer(n_closes == 0)]
+
+raw_z <- merge(raw, bank_zip[, .(CERT, zip, YEAR, is_inc, n_closes)],
+               by = c("CERT", "zip", "YEAR"), all.x = TRUE)
+raw_z[is.na(is_inc), is_inc := 0L]
+
+zt <- raw_z[!is.na(dep_lag1_a) & dep_lag1_a > 0, .(
+  total_deps    = sum(dep_lag1_a),
+  branches_lag1 = uniqueN(UNINUMBR),
+  n_banks       = uniqueN(CERT)
+), by = .(zip, YEAR)]
+
+z_events <- raw_z[, .(n_closed_zip = sum(closed, na.rm = TRUE)), by = .(zip, YEAR)]
+
+zc <- raw_z[closed == 1 & !is.na(dep_lag1_a) & dep_lag1_a > 0,
+  .(closed_deps = sum(dep_lag1_a)), by = .(zip, YEAR)]
+
+zi_curr <- raw_z[is_inc == 1L & !is.na(DEPSUMBR) & DEPSUMBR > 0, .(
+  inc_curr    = sum(as.numeric(DEPSUMBR)),
+  n_inc_banks = uniqueN(CERT)
+), by = .(zip, YEAR)]
+
+zi_tp1 <- raw_z[is_inc == 1L & !is.na(dep_lead1_a),
+  .(inc_tp1 = sum(dep_lead1_a)), by = .(zip, YEAR)]
+
+zip_pan <- Reduce(function(x, y) merge(x, y, by = c("zip", "YEAR"), all.x = TRUE),
+  list(zt, z_events, zc, zi_curr, zi_tp1))
+zip_pan[is.na(closed_deps),  closed_deps  := 0]
+zip_pan[is.na(n_closed_zip), n_closed_zip := 0L]
+
+zip_pan[, fraction_of_branches_closed := n_closed_zip / pmax(branches_lag1, 1)]
+zip_pan[, share_deps_closed           := closed_deps  / pmax(total_deps, 1)]
+zip_pan[, log_n_branches              := log1p(branches_lag1)]
+zip_pan[, log_n_inc_banks             := log1p(n_inc_banks)]
+zip_pan[, outcome := fifelse(total_deps > 0, (inc_tp1 - inc_curr) / total_deps, NA_real_)]
+
+zip_map <- unique(raw[, .(zip, county)])[!duplicated(zip)]
+zip_pan <- merge(zip_pan, zip_map, by = "zip", all.x = TRUE)
+zip_pan[, county_yr := paste0(county, "_", YEAR)]
+zip_pan[!is.na(outcome), outcome := wins(outcome)]
+zip_pan <- zip_pan[YEAR %between% c(2000, 2024) &
+                   !is.na(n_inc_banks) & n_inc_banks >= 2 & branches_lag1 >= 2 &
+                   !is.na(outcome) & !is.na(county)]
+
+zip_demo <- setDT(readRDS(ZIP_DEMO))
+zip_demo <- zip_demo[!is.na(zip), .(
+  zip  = formatC(as.integer(zip), width = 5, flag = "0"),
+  YEAR = as.integer(yr),
+  sophisticated
+)]
+zip_pan <- merge(zip_pan, zip_demo, by = c("zip", "YEAR"), all.x = TRUE)
+zip_pan <- zip_pan[!is.na(sophisticated)]
+invisible(NULL)
+```
+
+## 3. County-Year Panel
+
+Incumbent = bank with no closures in (county, YEAR). Outcome window: 2-year (t−1 → t+1), denominator = incumbent own t−1 deposits.
+
+```{r county-panel}
+cty_closers <- unique(raw[closed == 1, .(CERT, county, YEAR)])[, not_inc := TRUE]
+raw_c <- merge(raw, cty_closers, by = c("CERT", "county", "YEAR"), all.x = TRUE)
+raw_c[, inc := is.na(not_inc)]
+
+ct <- raw_c[!is.na(dep_lag1_a) & dep_lag1_a > 0, .(
+  total_deps = sum(dep_lag1_a),
+  n_branches = uniqueN(UNINUMBR),
+  n_banks    = uniqueN(CERT)
+), by = .(county, YEAR)]
+
+cc_dep <- raw_c[closed == 1 & !is.na(dep_lag1_a) & dep_lag1_a > 0,
+  .(closed_deps = sum(dep_lag1_a)), by = .(county, YEAR)]
+
+ci <- raw_c[inc == TRUE & !is.na(dep_lag1_a) & dep_lag1_a > 0 & !is.na(dep_lead1_a), .(
+  inc_tm1 = sum(dep_lag1_a),
+  inc_tp1 = sum(dep_lead1_a)
+), by = .(county, YEAR)]
+
+cty_pan <- merge(ct, cc_dep, by = c("county", "YEAR"), all.x = TRUE)
+cty_pan <- merge(cty_pan, ci,     by = c("county", "YEAR"), all.x = TRUE)
+cty_pan[is.na(closed_deps), closed_deps := 0]
+
+cty_pan[, share_deps_closed := closed_deps / pmax(total_deps, 1)]
+cty_pan[, log_n_branches    := log1p(n_branches)]
+cty_pan[, log_n_banks       := log1p(n_banks)]
+cty_pan[, dep_outcome       := fifelse(inc_tm1 > 0, (inc_tp1 - inc_tm1) / inc_tm1, NA_real_)]
+cty_pan[, state_yr          := paste0(substr(county, 1, 2), "_", YEAR)]
+cty_pan[!is.na(dep_outcome), dep_outcome := wins(dep_outcome)]
+cty_pan <- cty_pan[YEAR %between% c(2000, 2024) & n_banks >= 2 & n_branches >= 2 &
+                   !is.na(dep_outcome) & !is.na(county)]
+
+inc_set <- unique(raw_c[inc == TRUE, .(CERT, county, YEAR)])
+
+# County deposit growth trend (t−4 to t−1)
+cty_deps_yr <- raw[!is.na(DEPSUMBR) & DEPSUMBR > 0,
+  .(total_dep_county = sum(as.numeric(DEPSUMBR))), by = .(county, YEAR)]
+setorder(cty_deps_yr, county, YEAR)
+cty_deps_yr[, dep_lag4 := shift(total_dep_county, n = 4L, type = "lag"), by = county]
+cty_deps_yr[, yr_lag4  := shift(YEAR,             n = 4L, type = "lag"), by = county]
+cty_deps_yr[, county_dep_growth_t4_t1 := fifelse(
+  yr_lag4 == YEAR - 4 & dep_lag4 > 0,
+  (total_dep_county - dep_lag4) / dep_lag4, NA_real_
+)]
+
+cty_pan <- merge(cty_pan,
+                 cty_deps_yr[, .(county, YEAR, county_dep_growth_t4_t1)],
+                 by = c("county", "YEAR"), all.x = TRUE)
+cty_pan[, log1p_total_deps := log1p(total_deps)]
+
+cc <- setDT(readRDS(COUNTY_CTRL))
+if (!"county" %in% names(cc) && "county_code" %in% names(cc)) setnames(cc, "county_code", "county")
+if (!"YEAR"   %in% names(cc) && "year"        %in% names(cc)) setnames(cc, "year", "YEAR")
+cc[, county := formatC(as.integer(county), width = 5, flag = "0")]
+cc[, YEAR   := as.integer(YEAR)]
+
+ctrl_vars <- intersect(
+  c("log_population_density", "lag_county_deposit_hhi",
+    "lag_establishment_gr", "lag_payroll_gr",
+    "lag_hmda_mtg_amt_gr", "lag_cra_loan_amount_amt_lt_1m_gr", "lmi"),
+  names(cc)
+)
+cc_sel <- unique(cc[, c("county", "YEAR", ctrl_vars), with = FALSE], by = c("county", "YEAR"))
+cty_pan <- merge(cty_pan, cc_sel, by = c("county", "YEAR"), all.x = TRUE)
+invisible(NULL)
+```
+
+## 4. HMDA Purchase Mortgages
+
+```{r hmda}
+con <- dbConnect(duckdb(), HMDA_DB, read_only = TRUE)
+hmda_purch_raw <- rbind(
+  dbGetQuery(con, "
+    SELECT CAST(a.rssd_id AS BIGINT) AS rssdid,
+           LEFT(l.census_tract, 5)   AS county,
+           l.year                    AS YEAR,
+           SUM(CAST(l.loan_amount AS DOUBLE)) AS hmda_amt
+    FROM lar_panel l
+    JOIN avery_crosswalk a
+      ON  l.respondent_id = a.respondent_id
+      AND CAST(l.agency_code AS INTEGER) = CAST(a.agency_code AS INTEGER)
+      AND l.year = a.activity_year
+    WHERE l.action_taken = '1' AND l.loan_purpose = '1'
+      AND l.year < 2018 AND LENGTH(l.census_tract) >= 5
+    GROUP BY rssdid, county, l.year"),
+  dbGetQuery(con, "
+    SELECT CAST(a.rssd_id AS BIGINT) AS rssdid,
+           LEFT(l.census_tract, 5)   AS county,
+           l.year                    AS YEAR,
+           SUM(CAST(l.loan_amount AS DOUBLE)) AS hmda_amt
+    FROM lar_panel l
+    JOIN avery_crosswalk a ON l.lei = a.lei AND l.year = a.activity_year
+    WHERE l.action_taken = '1' AND l.loan_purpose = '1'
+      AND l.year >= 2018 AND LENGTH(l.census_tract) >= 5
+    GROUP BY rssdid, county, l.year")
+)
+dbDisconnect(con)
+
+setDT(hmda_purch_raw)
+hmda_purch_raw <- hmda_purch_raw[!is.na(rssdid) & rssdid != 0 & nchar(county) == 5]
+hmda_purch_raw <- hmda_purch_raw[, .(hmda_amt = sum(hmda_amt)), by = .(rssdid, county, YEAR)]
+hmda_purch_raw <- merge(hmda_purch_raw, cert_rssd,
+                        by.x = c("rssdid", "YEAR"), by.y = c("RSSDID", "YEAR"))
+hmda_purch_raw <- hmda_purch_raw[!is.na(CERT),
+  .(hmda_amt = sum(hmda_amt)), by = .(CERT, county, YEAR)]
+hmda_inc <- merge(hmda_purch_raw, inc_set, by = c("CERT", "county", "YEAR"))
+
+setorder(hmda_inc, CERT, county, YEAR)
+hmda_inc[, lag1  := shift(hmda_amt, n = 1L, type = "lag"),  by = .(CERT, county)]
+hmda_inc[, yr_l1 := shift(YEAR,     n = 1L, type = "lag"),  by = .(CERT, county)]
+hmda_inc[, lead1 := shift(hmda_amt, n = 1L, type = "lead"), by = .(CERT, county)]
+hmda_inc[, yr_f1 := shift(YEAR,     n = 1L, type = "lead"), by = .(CERT, county)]
+hmda_inc[, lag1  := fifelse(yr_l1 == YEAR - 1, lag1,  NA_real_)]
+hmda_inc[, lead1 := fifelse(yr_f1 == YEAR + 1, lead1, NA_real_)]
+hmda_inc <- hmda_inc[!is.na(lag1) & lag1 > 0 & !is.na(lead1)]
+
+hmda_cy <- hmda_inc[, .(h_lag1 = sum(lag1), h_lead1 = sum(lead1)), by = .(county, YEAR)]
+hmda_cy[, hmda_purch_growth := (h_lead1 - h_lag1) / h_lag1]
+cty_pan <- merge(cty_pan, hmda_cy[, .(county, YEAR, hmda_purch_growth)],
+                 by = c("county", "YEAR"), all.x = TRUE)
+cty_pan[!is.na(hmda_purch_growth), hmda_purch_growth := wins(hmda_purch_growth)]
+invisible(NULL)
+```
+
+### HMDA Zip-Year (Tract Crosswalk)
+
+```{r hmda-zip}
+xwalk <- setDT(read_excel(TRACT_ZIP_XW))
+xwalk[, ZIP   := formatC(as.integer(ZIP),   width = 5, flag = "0")]
+xwalk[, TRACT := as.character(TRACT)]
+
+con <- dbConnect(duckdb(), HMDA_DB, read_only = TRUE)
+hmda_tract_raw <- rbind(
+  dbGetQuery(con, "
+    SELECT CAST(a.rssd_id AS BIGINT) AS rssdid,
+           l.census_tract            AS tract,
+           l.year                    AS YEAR,
+           SUM(CAST(l.loan_amount AS DOUBLE)) AS hmda_amt
+    FROM lar_panel l
+    JOIN avery_crosswalk a
+      ON  l.respondent_id = a.respondent_id
+      AND CAST(l.agency_code AS INTEGER) = CAST(a.agency_code AS INTEGER)
+      AND l.year = a.activity_year
+    WHERE l.action_taken = '1' AND l.loan_purpose = '1'
+      AND l.year < 2018 AND LENGTH(l.census_tract) = 11
+    GROUP BY rssdid, l.census_tract, l.year"),
+  dbGetQuery(con, "
+    SELECT CAST(a.rssd_id AS BIGINT) AS rssdid,
+           l.census_tract            AS tract,
+           l.year                    AS YEAR,
+           SUM(CAST(l.loan_amount AS DOUBLE)) AS hmda_amt
+    FROM lar_panel l
+    JOIN avery_crosswalk a ON l.lei = a.lei AND l.year = a.activity_year
+    WHERE l.action_taken = '1' AND l.loan_purpose = '1'
+      AND l.year >= 2018 AND LENGTH(l.census_tract) = 11
+    GROUP BY rssdid, l.census_tract, l.year")
+)
+dbDisconnect(con)
+
+setDT(hmda_tract_raw)
+hmda_tract_raw <- hmda_tract_raw[!is.na(rssdid) & rssdid != 0 & !is.na(tract)]
+hmda_tract_raw <- hmda_tract_raw[, .(hmda_amt = sum(hmda_amt)), by = .(rssdid, tract, YEAR)]
+
+hmda_zip_raw <- merge(hmda_tract_raw, xwalk[, .(tract = TRACT, ZIP, RES_RATIO)],
+                      by = "tract", allow.cartesian = TRUE)
+hmda_zip_raw[, hmda_amt_zip := hmda_amt * RES_RATIO]
+hmda_zip_raw <- hmda_zip_raw[, .(hmda_amt = sum(hmda_amt_zip, na.rm = TRUE)),
+                               by = .(rssdid, zip = ZIP, YEAR)]
+hmda_zip_raw <- merge(hmda_zip_raw, cert_rssd,
+                      by.x = c("rssdid", "YEAR"), by.y = c("RSSDID", "YEAR"))
+hmda_zip_raw <- hmda_zip_raw[!is.na(CERT),
+  .(hmda_amt = sum(hmda_amt)), by = .(CERT, zip, YEAR)]
+
+zip_inc_set <- bank_zip[is_inc == 1L, .(CERT, zip, YEAR)]
+hmda_zip_inc <- merge(hmda_zip_raw, zip_inc_set, by = c("CERT", "zip", "YEAR"))
+
+setorder(hmda_zip_inc, CERT, zip, YEAR)
+hmda_zip_inc[, lag1  := shift(hmda_amt, n = 1L, type = "lag"),  by = .(CERT, zip)]
+hmda_zip_inc[, yr_l1 := shift(YEAR,     n = 1L, type = "lag"),  by = .(CERT, zip)]
+hmda_zip_inc[, lead1 := shift(hmda_amt, n = 1L, type = "lead"), by = .(CERT, zip)]
+hmda_zip_inc[, yr_f1 := shift(YEAR,     n = 1L, type = "lead"), by = .(CERT, zip)]
+hmda_zip_inc[, lag1  := fifelse(yr_l1 == YEAR - 1, lag1,  NA_real_)]
+hmda_zip_inc[, lead1 := fifelse(yr_f1 == YEAR + 1, lead1, NA_real_)]
+hmda_zip_inc <- hmda_zip_inc[!is.na(lag1) & lag1 > 0 & !is.na(lead1)]
+
+hmda_zip_cy <- hmda_zip_inc[, .(h_lag1 = sum(lag1), h_lead1 = sum(lead1)), by = .(zip, YEAR)]
+hmda_zip_cy[, hmda_purch_growth_zip := (h_lead1 - h_lag1) / h_lag1]
+zip_pan <- merge(zip_pan, hmda_zip_cy[, .(zip, YEAR, hmda_purch_growth_zip)],
+                 by = c("zip", "YEAR"), all.x = TRUE)
+zip_pan[!is.na(hmda_purch_growth_zip), hmda_purch_growth_zip := wins(hmda_purch_growth_zip)]
+invisible(NULL)
+```
+
+## 5. CRA Small-Business Lending
+
+```{r cra}
+con <- dbConnect(duckdb(), CRA_DB, read_only = TRUE)
+cra <- setDT(dbGetQuery(con, "
+  SELECT CAST(t.rssdid AS BIGINT) AS rssdid,
+         d.county_fips            AS county,
+         d.year                   AS YEAR,
+         SUM(
+           (COALESCE(CAST(d.amt_loans_lt_100k   AS DOUBLE), 0) +
+            COALESCE(CAST(d.amt_loans_100k_250k AS DOUBLE), 0) +
+            COALESCE(CAST(d.amt_loans_250k_1m   AS DOUBLE), 0)) * 1000
+         ) AS cra_amt
+  FROM disclosure_panel d
+  JOIN transmittal_panel t
+    ON  d.respondent_id = t.respondent_id
+    AND d.agency_code   = t.agency_code
+    AND d.year          = t.year
+  WHERE TRIM(d.table_id) = 'D1-1' AND TRIM(d.report_level) = '040'
+    AND CAST(d.action_taken AS INTEGER) = 1 AND d.county_fips IS NOT NULL
+  GROUP BY rssdid, d.county_fips, d.year"))
+dbDisconnect(con)
+
+cra <- cra[!is.na(rssdid) & rssdid != 0 & !is.na(county)]
+cra <- cra[, .(cra_amt = sum(cra_amt)), by = .(rssdid, county, YEAR)]
+cra <- merge(cra, cert_rssd, by.x = c("rssdid", "YEAR"), by.y = c("RSSDID", "YEAR"))
+cra <- cra[!is.na(CERT), .(cra_amt = sum(cra_amt)), by = .(CERT, county, YEAR)]
+cra_inc <- merge(cra, inc_set, by = c("CERT", "county", "YEAR"))
+
+setorder(cra_inc, CERT, county, YEAR)
+cra_inc[, lag1  := shift(cra_amt, n = 1L, type = "lag"),  by = .(CERT, county)]
+cra_inc[, yr_l1 := shift(YEAR,    n = 1L, type = "lag"),  by = .(CERT, county)]
+cra_inc[, lead1 := shift(cra_amt, n = 1L, type = "lead"), by = .(CERT, county)]
+cra_inc[, yr_f1 := shift(YEAR,    n = 1L, type = "lead"), by = .(CERT, county)]
+cra_inc[, lag1  := fifelse(yr_l1 == YEAR - 1, lag1,  NA_real_)]
+cra_inc[, lead1 := fifelse(yr_f1 == YEAR + 1, lead1, NA_real_)]
+cra_inc <- cra_inc[!is.na(lag1) & lag1 > 0 & !is.na(lead1)]
+
+cra_cy <- cra_inc[, .(c_lag1 = sum(lag1), c_lead1 = sum(lead1)), by = .(county, YEAR)]
+cra_cy[, cra_growth := (c_lead1 - c_lag1) / c_lag1]
+cty_pan <- merge(cty_pan, cra_cy[, .(county, YEAR, cra_growth)],
+                 by = c("county", "YEAR"), all.x = TRUE)
+cty_pan[!is.na(cra_growth), cra_growth := wins(cra_growth)]
+invisible(NULL)
+```
+
+## 6. Regression Specifications
+
+```{r specs}
+ctrl_zip <- ~ log_n_branches + log_n_inc_banks
+
+ctrl_cty <- ~ log_n_branches + log_n_banks + log1p_total_deps + county_dep_growth_t4_t1 +
+              log_population_density + lag_county_deposit_hhi + lag_establishment_gr +
+              lag_payroll_gr + lag_hmda_mtg_amt_gr + lag_cra_loan_amount_amt_lt_1m_gr + lmi
+
+zip_00_07 <- zip_pan[YEAR %between% c(2000, 2007)]
+zip_08_11 <- zip_pan[YEAR %between% c(2008, 2011)]
+zip_12_19 <- zip_pan[YEAR %between% c(2012, 2019)]
+zip_20_24 <- zip_pan[YEAR >= 2020]
+
+cty_pre  <- cty_pan[YEAR <  2012]
+cty_mid  <- cty_pan[YEAR %between% c(2012, 2019)]
+cty_post <- cty_pan[YEAR >= 2020]
+
+setFixest_etable(signif.code = c("***" = 0.01, "**" = 0.05, "*" = 0.1), se.below = TRUE)
+invisible(NULL)
+```
+
+## Table 1 — Incumbent Deposit Growth, Zip-Year (Count-Based Treatment)
+
+*Replication of NRS (2026) Table 14. LHS: $(dep^{inc}_{t+1} - dep^{inc}_t) / dep^{total}_{t-1}$. Treatment: fraction of branches closed. FE: zip + county×year. SE: clustered at zip.*
+
+```{r table1}
+#| output: true
+m1 <- list(
+  feols(outcome ~ fraction_of_branches_closed + .[ctrl_zip] | zip + county_yr, zip_00_07, vcov = ~zip),
+  feols(outcome ~ fraction_of_branches_closed + .[ctrl_zip] | zip + county_yr, zip_08_11, vcov = ~zip),
+  feols(outcome ~ fraction_of_branches_closed + .[ctrl_zip] | zip + county_yr, zip_12_19, vcov = ~zip),
+  feols(outcome ~ fraction_of_branches_closed + .[ctrl_zip] | zip + county_yr, zip_20_24, vcov = ~zip)
+)
+etable(m1, headers = c("2000–07", "2008–11", "2012–19", "2020–24"))
+```
+
+## Table 2 — Incumbent Deposit Growth, Zip-Year (Deposit-Weighted Treatment)
+
+*LHS: same as Table 1. Treatment: $\sum dep^{closed}_{t-1} / dep^{total}_{t-1}$. FE: zip + county×year. SE: clustered at zip.*
+
+```{r table2}
+#| output: true
+m2 <- list(
+  feols(outcome ~ share_deps_closed + .[ctrl_zip] | zip + county_yr, zip_00_07, vcov = ~zip),
+  feols(outcome ~ share_deps_closed + .[ctrl_zip] | zip + county_yr, zip_08_11, vcov = ~zip),
+  feols(outcome ~ share_deps_closed + .[ctrl_zip] | zip + county_yr, zip_12_19, vcov = ~zip),
+  feols(outcome ~ share_deps_closed + .[ctrl_zip] | zip + county_yr, zip_20_24, vcov = ~zip)
+)
+etable(m2, headers = c("2000–07", "2008–11", "2012–19", "2020–24"))
+```
+
+## Table 3 — Incumbent Deposit Growth, County-Year
+
+*LHS: $(dep^{inc}_{t+1} - dep^{inc}_{t-1}) / dep^{inc}_{t-1}$. Treatment: deposit-weighted share of county deposits in closed branches. FE: county + state×year. SE: clustered at county.*
+
+```{r table3}
+#| output: true
+m3 <- list(
+  feols(dep_outcome ~ share_deps_closed + .[ctrl_cty] | county + state_yr, cty_pre,  vcov = ~county),
+  feols(dep_outcome ~ share_deps_closed + .[ctrl_cty] | county + state_yr, cty_mid,  vcov = ~county),
+  feols(dep_outcome ~ share_deps_closed + .[ctrl_cty] | county + state_yr, cty_post, vcov = ~county)
+)
+etable(m3, headers = c("Pre-2012", "2012–2019", "2020–2024"))
+```
+
+## Table 4 — HMDA Purchase Mortgage Growth, Zip-Year
+
+*LHS: 2-year growth in incumbent purchase originations (tract→zip via HUD RES\_RATIO crosswalk, Dec 2019). Action taken = 1, loan purpose = 1. FE: zip + county×year. SE: clustered at zip.*
+
+```{r table4}
+#| output: true
+m4 <- list(
+  feols(hmda_purch_growth_zip ~ share_deps_closed + .[ctrl_zip] | zip + county_yr,
+        zip_00_07, vcov = ~zip),
+  feols(hmda_purch_growth_zip ~ share_deps_closed + .[ctrl_zip] | zip + county_yr,
+        zip_08_11, vcov = ~zip),
+  feols(hmda_purch_growth_zip ~ share_deps_closed + .[ctrl_zip] | zip + county_yr,
+        zip_12_19, vcov = ~zip),
+  feols(hmda_purch_growth_zip ~ share_deps_closed + .[ctrl_zip] | zip + county_yr,
+        zip_20_24, vcov = ~zip)
+)
+etable(m4, headers = c("2000–07", "2008–11", "2012–19", "2020–24"))
+```
+
+## Table 5 — HMDA Purchase Mortgage Growth, County-Year
+
+*LHS: 2-year growth in incumbent purchase originations, county level. FE: county + state×year. SE: clustered at county.*
+
+```{r table5}
+#| output: true
+m5 <- list(
+  feols(hmda_purch_growth ~ share_deps_closed + .[ctrl_cty] | county + state_yr,
+        cty_pre,  vcov = ~county),
+  feols(hmda_purch_growth ~ share_deps_closed + .[ctrl_cty] | county + state_yr,
+        cty_mid,  vcov = ~county),
+  feols(hmda_purch_growth ~ share_deps_closed + .[ctrl_cty] | county + state_yr,
+        cty_post, vcov = ~county)
+)
+etable(m5, headers = c("Pre-2012", "2012–2019", "2020–2024"))
+```
+
+## Table 6 — CRA Small-Business Lending Growth, County-Year
+
+*LHS: 2-year growth in incumbent small-business lending (CRA table D1-1, loans < $1M). FE: county + state×year. SE: clustered at county.*
+
+```{r table6}
+#| output: true
+m6 <- list(
+  feols(cra_growth ~ share_deps_closed + .[ctrl_cty] | county + state_yr,
+        cty_pre,  vcov = ~county),
+  feols(cra_growth ~ share_deps_closed + .[ctrl_cty] | county + state_yr,
+        cty_mid,  vcov = ~county),
+  feols(cra_growth ~ share_deps_closed + .[ctrl_cty] | county + state_yr,
+        cty_post, vcov = ~county)
+)
+etable(m6, headers = c("Pre-2012", "2012–2019", "2020–2024"))
+```
+
+## Table 7 — Own-Closure Design: Deposit Growth at Remaining Branches
+
+*Unit: bank-county-year. LHS: $(dep^{remain}_{t+1} - dep^{remain}_{t-1}) / dep^{total}_{t-1}$. Treatment: own closing deposits / total bank-county deposits. Excludes M&A-related closures and top-5% intensity. FE: bank×year + county×year. SE: clustered at bank.*
+
+```{r table7}
+#| output: true
+reg_main <- setDT(load_latest(REG_MAIN_DATA, "^reg_main_.*\\.rds$"))
+reg_main[, large_but_not_top4_bank := as.integer(large_bank == 1L & top4_bank == 0L)]
+
+setFixest_fml(
+  ..fixef    = ~ bank_id^YEAR + county^YEAR,
+  ..controls = ~ log1p(total_deps_bank_county_t1) + log1p(n_remaining_branches) + mkt_share_county_t1
+)
+
+r7 <- list(
+  "All"       = feols(growth_on_total_t1 ~ closure_share + ..controls | ..fixef,
+                      data = reg_main,                      vcov = ~bank_id),
+  "Pre-2012"  = feols(growth_on_total_t1 ~ closure_share + ..controls | ..fixef,
+                      data = reg_main[YEAR < 2012],         vcov = ~bank_id),
+  "2012–2024" = feols(growth_on_total_t1 ~ closure_share + ..controls | ..fixef,
+                      data = reg_main[YEAR >= 2012],        vcov = ~bank_id),
+  "2012–2019" = feols(growth_on_total_t1 ~ closure_share + ..controls | ..fixef,
+                      data = reg_main[YEAR %in% 2012:2019], vcov = ~bank_id)
+)
+etable(r7)
+```
+
+## Figure 1 — Sun & Abraham Event Study (Consistent Branch Set)
+
+*Unit: bank-county-year. DV: log(1 + deposits) at branches not closing in cohort year. Method: Sun & Abraham (2021), reference period t = −1. FE: unit + year. SE: clustered at bank. Window: ±3 years. Never-treated controls sampled at 50% (cohort = 10000).*
+
+```{r figure1, fig.width=9, fig.height=6}
+#| output: true
+sunab_panel <- setDT(load_latest(REG_MAIN_DATA, "^sunab_panel_consistent_.*\\.rds$"))
+
+m_pre   <- feols(log1p(deps_consistent) ~ sunab(cohort, YEAR, ref.p = -1) | unit_id + YEAR,
+                 data = sunab_panel[YEAR < 2012],            vcov = ~bank_id)
+m_12_19 <- feols(log1p(deps_consistent) ~ sunab(cohort, YEAR, ref.p = -1) | unit_id + YEAR,
+                 data = sunab_panel[YEAR >= 2012 & YEAR <= 2019], vcov = ~bank_id)
+m_20_24 <- feols(log1p(deps_consistent) ~ sunab(cohort, YEAR, ref.p = -1) | unit_id + YEAR,
+                 data = sunab_panel[YEAR >= 2020],            vcov = ~bank_id)
+
+es <- rbindlist(list(
+  sunab_tidy(m_pre,   "Pre-2012"),
+  sunab_tidy(m_12_19, "2012–2019"),
+  sunab_tidy(m_20_24, "2020–2024")
+), fill = TRUE) |> add_ref_point(ref = -1L)
+
+es[, period := factor(period, levels = c("Pre-2012", "2012–2019", "2020–2024"))]
+
+ggplot(es, aes(x = event_time, y = estimate, group = period, color = period)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+  geom_line(linewidth = 0.8) +
+  geom_point(aes(shape = period), size = 2.2) +
+  geom_errorbar(aes(ymin = estimate - 1.96 * se, ymax = estimate + 1.96 * se),
+                width = 0.2, linewidth = 0.4) +
+  scale_color_manual(values = c("Pre-2012"  = "#1b9e77",
+                                "2012–2019" = "#d95f02",
+                                "2020–2024" = "#7570b3")) +
+  labs(x = "Years Relative to First Closure", y = "Event-time effect",
+       color = NULL, shape = NULL) +
+  theme_minimal(base_size = 13) +
+  theme(legend.position = "bottom",
+        plot.background  = element_rect(fill = "transparent", color = NA),
+        panel.background = element_rect(fill = "transparent", color = NA))
+```

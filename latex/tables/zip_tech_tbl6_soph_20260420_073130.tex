@@ -1,0 +1,28 @@
+\begingroup
+\centering
+\begin{tabular}{lcccccccc}
+   \tabularnewline \midrule \midrule
+   Dependent Variable: & \multicolumn{8}{c}{outcome}\\
+   2000-07 & \multicolumn{8}{c}{2} \\ 
+   2008-11 & \multicolumn{8}{c}{2} \\ 
+   2012-19 & \multicolumn{8}{c}{2} \\ 
+   2020-24 & \multicolumn{8}{c}{2} \\ 
+   Model:                & (1)            & (2)            & (3)            & (4)           & (5)      & (6)      & (7)      & (8)\\  
+   \midrule
+   \emph{Variables}\\
+   share\_deps\_closed   & 0.0954$^{***}$ & 0.1439$^{***}$ & 0.0787$^{***}$ & 0.0794$^{**}$ & -0.0176  & -0.0202  & -0.0091  & -0.0392$^{*}$\\   
+                         & (0.0211)       & (0.0246)       & (0.0281)       & (0.0367)      & (0.0138) & (0.0149) & (0.0142) & (0.0238)\\   
+   \midrule
+   \emph{Fixed-effects}\\
+   zip                   & Yes            & Yes            & Yes            & Yes           & Yes      & Yes      & Yes      & Yes\\  
+   county\_yr            & Yes            & Yes            & Yes            & Yes           & Yes      & Yes      & Yes      & Yes\\  
+   \midrule
+   \emph{Fit statistics}\\
+   Observations          & 34,601         & 32,095         & 21,814         & 20,622        & 44,529   & 40,327   & 25,976   & 22,418\\  
+   R$^2$                 & 0.47031        & 0.51411        & 0.48363        & 0.49780       & 0.44185  & 0.52567  & 0.55607  & 0.57930\\  
+   Within R$^2$          & 0.01735        & 0.01094        & 0.00443        & 0.00144       & 0.00511  & 0.00301  & 0.00493  & 0.00642\\  
+   \midrule \midrule
+   \multicolumn{9}{l}{\emph{Clustered (zip) standard-errors in parentheses}}\\
+   \multicolumn{9}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
+\end{tabular}
+\par\endgroup
