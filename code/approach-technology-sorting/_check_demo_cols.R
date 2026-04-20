@@ -1,0 +1,6 @@
+library(data.table)
+dt <- setDT(readRDS("C:/Users/dimut/OneDrive/data/nrs_branch_closure/zip_demographics_panel.rds"))
+cat("Cols:", paste(names(dt), collapse=", "), "\n")
+cat("N rows:", nrow(dt), "\n")
+cat("Years:", min(dt[["yr"]], na.rm=TRUE), "-", max(dt[["yr"]], na.rm=TRUE), "\n")
+print(head(dt, 3))

@@ -143,6 +143,18 @@ zip_pan[, share_deps_closed_noapp := closed_deps_noapp / pmax(total_deps, 1)]
 
 zip_pan[, log_n_branches  := log1p(branches_lag1)]
 zip_pan[, log_n_inc_banks := log1p(n_inc_banks)]
+zip_pan[, log_total_deps  := log1p(total_deps)]
+
+# Deposit growth t-3 to t-1: shift total_deps (already t-1) by 2 more years
+setorder(zip_pan, zip, YEAR)
+zip_pan[, total_deps_3ya := shift(total_deps, 2L, type = "lag"), by = zip]
+zip_pan[, dep_growth_t3t1 := fifelse(
+  !is.na(total_deps_3ya) & total_deps_3ya > 0,
+  (total_deps - total_deps_3ya) / total_deps_3ya,
+  NA_real_
+)]
+zip_pan[!is.na(dep_growth_t3t1), dep_growth_t3t1 := wins(dep_growth_t3t1)]
+zip_pan[, total_deps_3ya := NULL]
 
 zip_pan[, outcome := fifelse(total_deps > 0, (inc_tp1 - inc_curr) / total_deps, NA_real_)]
 zip_pan[!is.na(outcome), outcome := wins(outcome)]

@@ -1,0 +1,36 @@
+\begingroup
+\centering
+\begin{tabular}{lcccc}
+   \tabularnewline \midrule \midrule
+   Dependent Variable: & \multicolumn{4}{c}{outcome}\\
+   Model:                        & (1)             & (2)             & (3)             & (4)\\  
+   \midrule
+   \emph{Variables}\\
+   share\_deps\_closed\_top4     & 0.0405          & 0.1051$^{***}$  & -0.0331$^{**}$  & 0.0199\\   
+                                 & (0.0404)        & (0.0340)        & (0.0141)        & (0.0144)\\   
+   share\_deps\_closed\_large    & 0.1651$^{***}$  & 0.0920$^{**}$   & 0.0095          & 0.0249\\   
+                                 & (0.0386)        & (0.0394)        & (0.0147)        & (0.0212)\\   
+   share\_deps\_closed\_small    & 0.1290$^{***}$  & 0.1114$^{***}$  & 0.0611$^{***}$  & 0.0329\\   
+                                 & (0.0263)        & (0.0322)        & (0.0157)        & (0.0210)\\   
+   log\_n\_branches              & -0.0146$^{*}$   & 0.0474$^{***}$  & 0.0177$^{**}$   & 0.0367$^{***}$\\   
+                                 & (0.0085)        & (0.0110)        & (0.0076)        & (0.0107)\\   
+   log\_n\_inc\_banks            & 0.0891$^{***}$  & 0.0498$^{***}$  & 0.0726$^{***}$  & 0.0936$^{***}$\\   
+                                 & (0.0075)        & (0.0079)        & (0.0058)        & (0.0089)\\   
+   log\_total\_deps              & -0.0984$^{***}$ & -0.1203$^{***}$ & -0.1047$^{***}$ & -0.1054$^{***}$\\   
+                                 & (0.0059)        & (0.0098)        & (0.0083)        & (0.0122)\\   
+   dep\_growth\_t3t1             & -0.0082$^{***}$ & -0.0054         & -0.0035         & -0.0371$^{***}$\\   
+                                 & (0.0022)        & (0.0044)        & (0.0028)        & (0.0057)\\   
+   \midrule
+   \emph{Fixed-effects}\\
+   zip                           & Yes             & Yes             & Yes             & Yes\\  
+   county\_yr                    & Yes             & Yes             & Yes             & Yes\\  
+   \midrule
+   \emph{Fit statistics}\\
+   Observations                  & 51,558          & 44,830          & 89,954          & 51,586\\  
+   R$^2$                         & 0.53992         & 0.48717         & 0.48180         & 0.56746\\  
+   Within R$^2$                  & 0.06345         & 0.04687         & 0.04331         & 0.05694\\  
+   \midrule \midrule
+   \multicolumn{5}{l}{\emph{Clustered (zip) standard-errors in parentheses}}\\
+   \multicolumn{5}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
+\end{tabular}
+\par\endgroup

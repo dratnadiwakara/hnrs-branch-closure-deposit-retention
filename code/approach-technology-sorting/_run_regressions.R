@@ -1,15 +1,4 @@
----
-title: "Technology Sorting: Zip-Year Deposit Reallocation"
-format: html
-type: source
-execute:
-  warning: false
-  message: false
----
-
-## Setup
-
-```{r}
+## -----------------------------------------------------------------------------
 rm(list = ls())
 
 library(data.table)
@@ -27,22 +16,18 @@ setFixest_etable(
 tex_out <- function(filename) {
   file.path("latex", "tables", paste0(filename, "_", dat_suffix, ".tex"))
 }
-```
 
-## Load sample
 
-```{r}
+## -----------------------------------------------------------------------------
 sample_files <- list.files("data", pattern = "^zip_tech_sample_\\d{8}\\.rds$",
                            full.names = TRUE)
 if (!length(sample_files)) stop("Run 01_build_zip_tech_sample_20260419.R first.")
 dt <- setDT(readRDS(sample_files[which.max(file.mtime(sample_files))]))
 message("Loaded: ", basename(sample_files[which.max(file.mtime(sample_files))]),
         " — N = ", nrow(dt))
-```
 
-## Period subsets
 
-```{r}
+## -----------------------------------------------------------------------------
 # Zip-level sophistication: majority-year classification (must precede period splits)
 dt[, soph_zip := mean(sophisticated, na.rm = TRUE) >= 0.5, by = zip]
 
@@ -53,18 +38,9 @@ d2024 <- dt[YEAR %between% c(2020, 2024)]
 
 d_pre  <- dt[YEAR < 2012]
 d_post <- dt[YEAR >= 2012]
-```
 
----
 
-## Table 1 — Baseline (anchor)
-
-Replicates Table 2 from the 2026-04-18 snapshot. Confirms sample matches baseline
-before adding heterogeneity. Outcome: `(inc_tp1 − inc_curr) / total_deps` (1-year
-window). Treatment: deposit-weighted share of branches closed by any competitor.
-FE: zip + county×year. SE: clustered at zip.
-
-```{r tbl1-baseline}
+## ----tbl1-baseline------------------------------------------------------------
 run_base <- function(data) feols(
   outcome ~ share_deps_closed + log_n_branches + log_n_inc_banks +
     log_total_deps + dep_growth_t3t1 | zip + county_yr,
@@ -88,18 +64,9 @@ for (nm in names(r_base)) {
 }
 
 if (save_tables) writeLines(etable(r_base, tex=TRUE, headers=list("Period"=4)), tex_out("zip_tech_tbl1_baseline"))
-```
 
----
 
-## Table 2 — Closing-bank size decomposition
-
-Replace aggregate `share_deps_closed` with three mutually exclusive components:
-deposits closed by top-4 banks, by large-but-not-top-4 banks (assets > \$100B),
-and by small banks. Hypothesis: small-bank closures drive the pre-2012 spillover;
-large and top-4 closures are always near zero because those banks retain deposits.
-
-```{r tbl2-size}
+## ----tbl2-size----------------------------------------------------------------
 run_size <- function(data) feols(
   outcome ~ share_deps_closed_top4 + share_deps_closed_large + share_deps_closed_small +
     log_n_branches + log_n_inc_banks + log_total_deps + dep_growth_t3t1 | zip + county_yr,
@@ -117,19 +84,9 @@ etable(r_size,
   order = c("share_deps_closed_top4", "share_deps_closed_large", "share_deps_closed_small"))
 
 if (save_tables) writeLines(etable(r_size, tex=TRUE, order=c("share_deps_closed_top4","share_deps_closed_large","share_deps_closed_small")), tex_out("zip_tech_tbl2_size"))
-```
 
----
 
-## Table 3 — Closing-bank app decomposition
-
-Separate closures by banks WITH a mobile app (non-top-4) from closures by banks
-WITHOUT an app. Hypothesis: no-app closures release more deposits to incumbents
-(those banks have high convenience loss from closing); app closures release less.
-The gap between the two coefficients should shrink post-2012 as app coverage
-expands and both types of closures release fewer deposits.
-
-```{r tbl3-app}
+## ----tbl3-app-----------------------------------------------------------------
 run_app <- function(data) feols(
   outcome ~ share_deps_closed_app + share_deps_closed_noapp +
     log_n_branches + log_n_inc_banks + log_total_deps + dep_growth_t3t1 | zip + county_yr,
@@ -147,26 +104,9 @@ etable(r_app,
   order = c("share_deps_closed_app", "share_deps_closed_noapp"))
 
 if (save_tables) writeLines(etable(r_app, tex=TRUE, order=c("share_deps_closed_app","share_deps_closed_noapp")), tex_out("zip_tech_tbl3_app"))
-```
 
----
 
-## Table 4 — Local digital infrastructure interaction
-
-Interact `share_deps_closed` with county-level mobile subscription penetration
-(`perc_hh_wMobileSub`). In counties where households are more digitally connected,
-depositors face lower convenience loss from any branch closure, so incumbents
-absorb less even when small/no-app banks close. Hypothesis: negative interaction
-coefficient (higher mobile penetration → less spillover to incumbents).
-
-*Note:* `perc_hh_wMobileSub` is a county-year variable; its main effect is
-absorbed by county×year FE and is correctly dropped (collinearity). The
-interaction with `share_deps_closed` is identified because `share_deps_closed`
-varies across zips within a county-year. Mobile data coverage is sparse pre-2012
-(~43k of 128k observations), so the pre-2012 column should be interpreted with
-caution. Focus is on 2012–2024 columns.
-
-```{r tbl4-mobile}
+## ----tbl4-mobile--------------------------------------------------------------
 run_mob <- function(data) feols(
   outcome ~ share_deps_closed + share_deps_closed:perc_hh_wMobileSub +
     perc_hh_wMobileSub + log_n_branches + log_n_inc_banks +
@@ -184,18 +124,9 @@ etable(r_mob,
   order = c("share_deps_closed$", "share_deps_closed:perc", "perc_hh"))
 
 if (save_tables) writeLines(etable(r_mob, tex=TRUE, order=c("share_deps_closed$","share_deps_closed:perc","perc_hh")), tex_out("zip_tech_tbl4_mobile"))
-```
 
----
 
-## Table 5 — Combined specification (digital era only)
-
-Single specification in the digital era (2012+) combining all three heterogeneity
-dimensions: closing-bank app status, closing-bank size (top4 interaction), and
-county mobile penetration. Shows that the technology attenuation is robust to
-controlling for multiple mechanisms simultaneously.
-
-```{r tbl5-combined}
+## ----tbl5-combined------------------------------------------------------------
 r_comb <- list(
   "2012–2024" = feols(
     outcome ~ share_deps_closed_app + share_deps_closed_noapp +
@@ -220,20 +151,9 @@ etable(r_comb,
             "share_deps_closed_top4", "share_deps_closed:perc", "perc_hh"))
 
 # if (save_tables) writeLines(etable(r_comb, tex=TRUE, order=c("share_deps_closed_app","share_deps_closed_noapp","share_deps_closed_top4","share_deps_closed:perc","perc_hh")), tex_out("zip_tech_tbl5_combined"))
-```
 
----
 
-## Table 6 — Depositor sophistication interaction
-
-Interact `share_deps_closed` with zip-year sophistication classification
-(`sophisticated`: within-year binary indicator from zip demographics panel).
-Main effect of `sophisticated` included; its within-zip variation after zip FE
-captures zips that switch classification over time. Hypothesis: negative interaction
-— unsophisticated zip-years (sophisticated = 0) show larger reallocation to
-incumbents; sophisticated zip-years show attenuated reallocation.
-
-```{r tbl6-soph}
+## ----tbl6-soph----------------------------------------------------------------
 run_soph_int <- function(data) feols(
   outcome ~ share_deps_closed + share_deps_closed:sophisticated +
     sophisticated + log_n_branches + log_n_inc_banks +
@@ -256,4 +176,4 @@ if (save_tables) writeLines(
          order = c("share_deps_closed$", "share_deps_closed:soph", "sophisticated$")),
   tex_out("zip_tech_tbl6_soph")
 )
-```
+
