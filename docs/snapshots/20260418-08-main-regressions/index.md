@@ -1,9 +1,9 @@
 ---
 layout: default
-title: "08-main-regressions — 2026-04-21 (updated with log_total_deps + dep_growth_t3t1)"
+title: "Snapshot 2026-04-21"
 ---
 
-# Snapshot: 08-main-regressions
+# Snapshot 2026-04-21
 
 > All zip-year regressions (Sections 1–2, 4, 9–14) now include `log_total_deps` and `dep_growth_t3t1` as controls. Core finding unchanged: pre-2012 incumbent deposit reallocation (+0.12*** deposit-weighted) collapses to near-zero post-2012 (+0.010, n.s.). HMDA lending outcomes null across all periods. Own-closure regressions (Section 7) now use the bank-zip-year panel (reg_main_zip) replacing the earlier county-level panel; closure retention stable across periods (+0.57–0.66***). Sun & Abraham event study (Section 8) updated with new figure. Technology decomposition (Sections 9–14): small-bank and no-app closures drive pre-2012 effect; top-4 null pre-crisis; mobile penetration interaction −0.160*** in 2012–19; sophistication interaction uniformly insignificant in pre-digital period — the structural break dominates cross-sectional heterogeneity.
 
@@ -41,6 +41,7 @@ title: "08-main-regressions — 2026-04-21 (updated with log_total_deps + dep_gr
 | R²                          | 0.53996    | 0.48664    | 0.48156    | 0.56741    |
 | Within R²                   | 0.06352    | 0.04588    | 0.04287    | 0.05684    |
 ```
+
 *Note: \*\*\* p<0.01, \*\* p<0.05, \* p<0.10*
 
 ---
@@ -76,6 +77,7 @@ title: "08-main-regressions — 2026-04-21 (updated with log_total_deps + dep_gr
 | R²                    | 0.53982    | 0.48717    | 0.48155    | 0.56746    |
 | Within R²             | 0.06325    | 0.04686    | 0.04285    | 0.05693    |
 ```
+
 *Note: \*\*\* p<0.01, \*\* p<0.05, \* p<0.10*
 
 ---
@@ -115,6 +117,7 @@ title: "08-main-regressions — 2026-04-21 (updated with log_total_deps + dep_gr
 | Adj. R²                          | —                   | —           | —           |
 | Within R²                        | 0.147               | 0.201       | 0.275       |
 ```
+
 *Note: \*\*\* p<0.01, \*\* p<0.05, \* p<0.10*
 
 ---
@@ -153,6 +156,7 @@ title: "08-main-regressions — 2026-04-21 (updated with log_total_deps + dep_gr
 | R²                    | 0.47261    | 0.53690    | 0.38819    | 0.46282    |
 | Within R²             | 0.00148    | 0.00083    | 0.00169    | 0.00085    |
 ```
+
 *Note: \*\*\* p<0.01, \*\* p<0.05, \* p<0.10*
 
 ---
@@ -187,6 +191,7 @@ title: "08-main-regressions — 2026-04-21 (updated with log_total_deps + dep_gr
 | Adj. R²                 | —                   | —          | —          |
 | Within R²               | 0.005               | 0.013      | 0.008      |
 ```
+
 *Note: \*\*\* p<0.01, \*\* p<0.05, \* p<0.10*
 
 ---
@@ -220,6 +225,7 @@ title: "08-main-regressions — 2026-04-21 (updated with log_total_deps + dep_gr
 | Adj. R²                          | —                   | —          | —          |
 | Within R²                        | 0.017               | 0.027      | 0.042      |
 ```
+
 *Note: \*\*\* p<0.01, \*\* p<0.05, \* p<0.10*
 
 ---
@@ -251,6 +257,7 @@ title: "08-main-regressions — 2026-04-21 (updated with log_total_deps + dep_gr
 | R²                            | 0.52207      | 0.58355    | 0.47499    | 0.45094    |
 | Within R²                     | 0.19267      | 0.25477    | 0.15433    | 0.15723    |
 ```
+
 *Note: \*\*\* p<0.01, \*\* p<0.05, \* p<0.10*
 
 ---
@@ -276,6 +283,7 @@ title: "08-main-regressions — 2026-04-21 (updated with log_total_deps + dep_gr
 | Year FE   | Yes      | Yes      | Yes     | Yes       | Yes      | Yes       | Yes       |
 | SE        | Bank     | Bank     | Bank    | Bank      | Bank     | Bank      | Bank      |
 ```
+
 *Note: \*\*\* p<0.01, \*\* p<0.05, \* p<0.10*
 
 *Pre-trend: t=−2 small and insignificant across all periods. Pre-2012 post-event path reverses at t=2/t=3 (deposits not durably retained). Digital-era path persistent and monotone — deposits retained after own closures. Maps to Prediction 1 of theory model.*
@@ -316,6 +324,7 @@ title: "08-main-regressions — 2026-04-21 (updated with log_total_deps + dep_gr
 | R²                 | 0.53982    | 0.48717    | 0.48155    | 0.56746    |
 | Within R²          | 0.06325    | 0.04686    | 0.04285    | 0.05693    |
 ```
+
 *Note: \*\*\* p<0.01, \*\* p<0.05, \* p<0.10*
 
 ---
@@ -323,6 +332,7 @@ title: "08-main-regressions — 2026-04-21 (updated with log_total_deps + dep_gr
 ## 10. Closing-Bank Size Decomposition — Zip-Year
 
 **Treatment decomposition:**
+
 - `share_deps_closed_top4` = deposits in top-4 (JPM/BAC/WFC/Citi) closing branches / total deps
 - `share_deps_closed_large` = large-but-not-top4 (assets > $100B) closing branches / total deps
 - `share_deps_closed_small` = all other closing branches / total deps
@@ -355,6 +365,7 @@ title: "08-main-regressions — 2026-04-21 (updated with log_total_deps + dep_gr
 | R²                       | 0.53992    | 0.48717    | 0.48180    | 0.56746    |
 | Within R²                | 0.06345    | 0.04687    | 0.04331    | 0.05694    |
 ```
+
 *Note: \*\*\* p<0.01, \*\* p<0.05, \* p<0.10*
 
 ---
@@ -362,6 +373,7 @@ title: "08-main-regressions — 2026-04-21 (updated with log_total_deps + dep_gr
 ## 11. Closing-Bank App Decomposition — Zip-Year
 
 **Treatment decomposition:**
+
 - `share_deps_closed_app` = deposits in non-top4 closing branches with mobile app / total deps
 - `share_deps_closed_noapp` = deposits in closing branches without mobile app / total deps
 
@@ -391,6 +403,7 @@ title: "08-main-regressions — 2026-04-21 (updated with log_total_deps + dep_gr
 | R²                       | 0.53984    | 0.48695    | 0.48173    | 0.56743    |
 | Within R²                | 0.06328    | 0.04645    | 0.04318    | 0.05688    |
 ```
+
 *Note: \*\*\* p<0.01, \*\* p<0.05, \* p<0.10*
 
 ---
@@ -427,6 +440,7 @@ title: "08-main-regressions — 2026-04-21 (updated with log_total_deps + dep_gr
 | R²                                            | 0.45112    | 0.44590    | 0.59192    |
 | Within R²                                     | 0.04115    | 0.04342    | 0.06161    |
 ```
+
 *Note: \*\*\* p<0.01, \*\* p<0.05, \* p<0.10*
 
 ---
@@ -464,6 +478,7 @@ title: "08-main-regressions — 2026-04-21 (updated with log_total_deps + dep_gr
 | R²                                            | 0.45121    | 0.44604    |
 | Within R²                                     | 0.04130    | 0.04367    |
 ```
+
 *Note: \*\*\* p<0.01, \*\* p<0.05, \* p<0.10*
 
 ---
@@ -501,6 +516,7 @@ title: "08-main-regressions — 2026-04-21 (updated with log_total_deps + dep_gr
 | R²                                 | 0.53982    | 0.48717    | 0.64535    | 0.51108    | 0.56750    |
 | Within R²                          | 0.06325    | 0.04687    | 0.00453    | 0.04533    | 0.05702    |
 ```
+
 *Note: \*\*\* p<0.01, \*\* p<0.05, \* p<0.10*
 
 *2012–13 transition: reallocation still present (0.090**), sophistication not yet a moderator (+0.009, n.s.). 2014–19: interaction turns negative and significant (−0.034**) — sophisticated zips show meaningfully less reallocation once digital adoption is widespread.*
