@@ -9,7 +9,6 @@ Snapshots of result sets shared with coauthors. Each snapshot captures the table
 
 | Date | Slug | Notes |
 |------|------|-------|
-| [2026-04-20](snapshots/20260420-own-closure-het/index.md) | own-closure-het | |
 | [2026-04-20](snapshots/20260420-technology-sorting/index.md) | technology-sorting | |
 | [2026-04-18](snapshots/20260418-08-main-regressions/index.md) | 08-main-regressions | |
 
