@@ -41,6 +41,12 @@ REG_MAIN_DATA  <- here("data")   # folder containing reg_main_*.rds and sunab_pa
 ## Helpers
 
 ```{r helpers}
+save_tables  <- TRUE
+save_figures <- TRUE
+dat_suffix   <- format(Sys.time(), "%Y%m%d_%H%M%S")
+tex_out <- function(nm) file.path("latex", "tables",  paste0(nm, "_", dat_suffix, ".tex"))
+fig_out <- function(nm) file.path("latex", "figures", paste0(nm, "_", dat_suffix, ".png"))
+
 wins <- function(x, lo = 0.025, hi = 0.975) {
   q <- quantile(x, c(lo, hi), na.rm = TRUE)
   pmin(pmax(x, q[1]), q[2])
@@ -134,6 +140,19 @@ zip_pan[, fraction_of_branches_closed := n_closed_zip / pmax(branches_lag1, 1)]
 zip_pan[, share_deps_closed           := closed_deps  / pmax(total_deps, 1)]
 zip_pan[, log_n_branches              := log1p(branches_lag1)]
 zip_pan[, log_n_inc_banks             := log1p(n_inc_banks)]
+zip_pan[, log_total_deps              := log1p(total_deps)]
+
+# Deposit growth t−3 to t−1: total_deps is already t−1; shift by 2 more years
+setorder(zip_pan, zip, YEAR)
+zip_pan[, total_deps_3ya := shift(total_deps, 2L, type = "lag"), by = zip]
+zip_pan[, dep_growth_t3t1 := fifelse(
+  !is.na(total_deps_3ya) & total_deps_3ya > 0,
+  (total_deps - total_deps_3ya) / total_deps_3ya,
+  NA_real_
+)]
+zip_pan[!is.na(dep_growth_t3t1), dep_growth_t3t1 := wins(dep_growth_t3t1)]
+zip_pan[, total_deps_3ya := NULL]
+
 zip_pan[, outcome := fifelse(total_deps > 0, (inc_tp1 - inc_curr) / total_deps, NA_real_)]
 
 zip_map <- unique(raw[, .(zip, county)])[!duplicated(zip)]
@@ -401,7 +420,7 @@ invisible(NULL)
 ## 6. Regression Specifications
 
 ```{r specs}
-ctrl_zip <- ~ log_n_branches + log_n_inc_banks
+ctrl_zip <- ~ log_n_branches + log_n_inc_banks + log_total_deps + dep_growth_t3t1
 
 ctrl_cty <- ~ log_n_branches + log_n_banks + log1p_total_deps + county_dep_growth_t4_t1 +
               log_population_density + lag_county_deposit_hhi + lag_establishment_gr +
@@ -433,6 +452,7 @@ m1 <- list(
   feols(outcome ~ fraction_of_branches_closed + .[ctrl_zip] | zip + county_yr, zip_20_24, vcov = ~zip)
 )
 etable(m1, headers = c("2000–07", "2008–11", "2012–19", "2020–24"))
+if (save_tables) writeLines(etable(m1, tex = TRUE, headers = c("2000–07", "2008–11", "2012–19", "2020–24")), tex_out("main_tbl1_zip_count"))
 ```
 
 ## Table 2 — Incumbent Deposit Growth, Zip-Year (Deposit-Weighted Treatment)
@@ -448,6 +468,7 @@ m2 <- list(
   feols(outcome ~ share_deps_closed + .[ctrl_zip] | zip + county_yr, zip_20_24, vcov = ~zip)
 )
 etable(m2, headers = c("2000–07", "2008–11", "2012–19", "2020–24"))
+if (save_tables) writeLines(etable(m2, tex = TRUE, headers = c("2000–07", "2008–11", "2012–19", "2020–24")), tex_out("main_tbl2_zip_depwt"))
 ```
 
 ## Table 3 — Incumbent Deposit Growth, County-Year
@@ -462,6 +483,7 @@ m3 <- list(
   feols(dep_outcome ~ share_deps_closed + .[ctrl_cty] | county + state_yr, cty_post, vcov = ~county)
 )
 etable(m3, headers = c("Pre-2012", "2012–2019", "2020–2024"))
+if (save_tables) writeLines(etable(m3, tex = TRUE, headers = c("Pre-2012", "2012–2019", "2020–2024")), tex_out("main_tbl3_county_dep"))
 ```
 
 ## Table 4 — HMDA Purchase Mortgage Growth, Zip-Year
@@ -481,6 +503,7 @@ m4 <- list(
         zip_20_24, vcov = ~zip)
 )
 etable(m4, headers = c("2000–07", "2008–11", "2012–19", "2020–24"))
+if (save_tables) writeLines(etable(m4, tex = TRUE, headers = c("2000–07", "2008–11", "2012–19", "2020–24")), tex_out("main_tbl4_hmda_zip"))
 ```
 
 ## Table 5 — HMDA Purchase Mortgage Growth, County-Year
@@ -498,6 +521,7 @@ m5 <- list(
         cty_post, vcov = ~county)
 )
 etable(m5, headers = c("Pre-2012", "2012–2019", "2020–2024"))
+if (save_tables) writeLines(etable(m5, tex = TRUE, headers = c("Pre-2012", "2012–2019", "2020–2024")), tex_out("main_tbl5_hmda_county"))
 ```
 
 ## Table 6 — CRA Small-Business Lending Growth, County-Year
@@ -515,20 +539,21 @@ m6 <- list(
         cty_post, vcov = ~county)
 )
 etable(m6, headers = c("Pre-2012", "2012–2019", "2020–2024"))
+if (save_tables) writeLines(etable(m6, tex = TRUE, headers = c("Pre-2012", "2012–2019", "2020–2024")), tex_out("main_tbl6_cra_county"))
 ```
 
 ## Table 7 — Own-Closure Design: Deposit Growth at Remaining Branches
 
-*Unit: bank-county-year. LHS: $(dep^{remain}_{t+1} - dep^{remain}_{t-1}) / dep^{total}_{t-1}$. Treatment: own closing deposits / total bank-county deposits. Excludes M&A-related closures and top-5% intensity. FE: bank×year + county×year. SE: clustered at bank.*
+*Unit: bank-zip-year. LHS: $(dep^{remain}_{t+1} - dep^{remain}_{t-1}) / dep^{total}_{t-1}$. Treatment: own closing deposits / total bank-zip deposits. Excludes M&A-related closures and top-5% intensity. FE: bank×year + zip×year. SE: clustered at bank.*
 
 ```{r table7}
 #| output: true
-reg_main <- setDT(load_latest(REG_MAIN_DATA, "^reg_main_.*\\.rds$"))
+reg_main <- setDT(load_latest(REG_MAIN_DATA, "^reg_main_"))
 reg_main[, large_but_not_top4_bank := as.integer(large_bank == 1L & top4_bank == 0L)]
 
 setFixest_fml(
-  ..fixef    = ~ bank_id^YEAR + county^YEAR,
-  ..controls = ~ log1p(total_deps_bank_county_t1) + log1p(n_remaining_branches) + mkt_share_county_t1
+  ..fixef    = ~ bank_id^YEAR + zip^YEAR,
+  ..controls = ~ log1p(total_deps_bank_zip_t1) + log1p(n_remaining_branches) + mkt_share_zip_t1
 )
 
 r7 <- list(
@@ -542,6 +567,7 @@ r7 <- list(
                       data = reg_main[YEAR %in% 2012:2019], vcov = ~bank_id)
 )
 etable(r7)
+if (save_tables) writeLines(etable(r7, tex = TRUE), tex_out("main_tbl7_own_closure"))
 ```
 
 ## Figure 1 — Sun & Abraham Event Study (Consistent Branch Set)
@@ -582,4 +608,5 @@ ggplot(es, aes(x = event_time, y = estimate, group = period, color = period)) +
   theme(legend.position = "bottom",
         plot.background  = element_rect(fill = "transparent", color = NA),
         panel.background = element_rect(fill = "transparent", color = NA))
+if (save_figures) ggsave(fig_out("main_fig1_sunab"), width = 9, height = 6, bg = "transparent")
 ```

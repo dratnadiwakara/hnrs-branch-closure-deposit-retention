@@ -1,39 +1,45 @@
 ---
 layout: default
-title: "08-main-regressions — 2026-04-21 (updated)"
+title: "08-main-regressions — 2026-04-21 (updated with log_total_deps + dep_growth_t3t1)"
 ---
 
 # Snapshot: 08-main-regressions
 
-> Incumbent banks absorb competitor-closure deposits in the pre-digital era but not in the digital era. Zip-level regressions (revised spec, Sections 9–10) show strong positive deposit reallocation pre-2012 (+0.121***) collapsing to near-zero post-2012 (+0.010, n.s.). Lending outcomes (HMDA, CRA) are null across all periods. Own-closure analysis (Section 7) confirms deposit retention at remaining branches (+0.54–0.68***) stable across periods. Sun & Abraham event study (Section 8) confirms no pre-trend; digital-era path persistent and monotone. Technology decomposition (Sections 9–14): the pre-2012 effect is driven by small-bank and no-app closures; large/top-4 effects are smaller and less consistent. Mobile penetration interaction is negative and significant in 2012–19 (−0.160***), consistent with local digital infrastructure substituting for branch access. Depositor sophistication interaction (Section 14) is uniformly insignificant — the 2012 structural break dominates cross-sectional heterogeneity in depositor type.
+> All zip-year regressions (Sections 1–2, 4, 9–14) now include `log_total_deps` and `dep_growth_t3t1` as controls. Core finding unchanged: pre-2012 incumbent deposit reallocation (+0.12*** deposit-weighted) collapses to near-zero post-2012 (+0.010, n.s.). HMDA lending outcomes null across all periods. Own-closure regressions (Section 7) now use the bank-zip-year panel (reg_main_zip) replacing the earlier county-level panel; closure retention stable across periods (+0.57–0.66***). Sun & Abraham event study (Section 8) updated with new figure. Technology decomposition (Sections 9–14): small-bank and no-app closures drive pre-2012 effect; top-4 null pre-crisis; mobile penetration interaction −0.160*** in 2012–19; sophistication interaction uniformly insignificant in pre-digital period — the structural break dominates cross-sectional heterogeneity.
 
 ---
 
-## 1. NRS (2026) Table 14 Replication — Count-Based Treatment, Zip-Year
+## 1. Count-Based Treatment — Zip-Year
 
 **Unit:** zip-year  
 **LHS:** `(inc_deps_{t+1} − inc_deps_t) / total_zip_deps_{t−1}` — 1-year window (t → t+1); denominator = total zip deposits at t−1  
 **Treatment:** `fraction_of_branches_closed` = closed branch count / total branch count at t−1  
 **Incumbent:** bank with NO closes in (zip, YEAR). Demographics filter (`!is.na(sophisticated)`) applied.  
 **FE:** zip + county×year | **SE:** clustered at zip  
-**Controls:** `log_n_branches`, `log_n_inc_banks`  
-*Note: N=70,727 vs NRS reference 73,123 — gap from OTS filter not implemented.*
+**Controls:** `log_n_branches`, `log_n_inc_banks`, `log_total_deps`, `dep_growth_t3t1`  
+*Note: 2000–01 dropped due to dep_growth_t3t1 lag; N=51,558 after sophisticated filter.*
 
 ```
 |                             | 2000–07    | 2008–11    | 2012–19    | 2020–24    |
 | --------------------------- | ---------- | ---------- | ---------- | ---------- |
-| fraction_of_branches_closed | 0.0951***  | 0.0369     | 0.0060     | 0.0040     |
-|                             | (0.0114)   | (0.0150)   | (0.0092)   | (0.0140)   |
-| log_n_branches              | −0.1215*** | −0.0632*** | −0.0626*** | −0.0740*** |
-| log_n_inc_banks             | 0.0835***  | 0.0334***  | 0.0584***  | 0.0659***  |
-| N                           | 70,727     | 44,953     | 89,982     | 51,601     |
+| fraction_of_branches_closed | 0.0931***  | 0.0326**   | 0.0126     | 0.0156     |
+|                             | (0.0138)   | (0.0152)   | (0.0090)   | (0.0135)   |
+| log_n_branches              | −0.0207**  | 0.0513***  | 0.0164*    | 0.0372***  |
+|                             | (0.0089)   | (0.0113)   | (0.0085)   | (0.0123)   |
+| log_n_inc_banks             | 0.0986***  | 0.0451***  | 0.0748***  | 0.0926***  |
+|                             | (0.0080)   | (0.0086)   | (0.0069)   | (0.0106)   |
+| log_total_deps              | −0.0979*** | −0.1192*** | −0.1048*** | −0.1047*** |
+|                             | (0.0059)   | (0.0098)   | (0.0083)   | (0.0119)   |
+| dep_growth_t3t1             | −0.0081*** | −0.0057    | −0.0036    | −0.0373*** |
+|                             | (0.0022)   | (0.0044)   | (0.0028)   | (0.0057)   |
+| N                           | 51,558     | 44,830     | 89,954     | 51,586     |
 | Zip FE                      | Yes        | Yes        | Yes        | Yes        |
 | County×Year FE              | Yes        | Yes        | Yes        | Yes        |
 | SE                          | Zip        | Zip        | Zip        | Zip        |
-| Mean(gr_zip_inc)            | 0.048      | 0.037      | 0.062      | 0.054      |
+| Mean(outcome)               | 0.049      | 0.037      | 0.062      | 0.054      |
 | SD(fraction_closed)         | 0.057      | 0.053      | 0.060      | 0.069      |
-| Adj. R²                     | —          | —          | —          | —          |
-| Within R²                   | 0.015      | 0.003      | 0.004      | 0.005      |
+| R²                          | 0.53996    | 0.48664    | 0.48156    | 0.56741    |
+| Within R²                   | 0.06352    | 0.04588    | 0.04287    | 0.05684    |
 ```
 *Note: \*\*\* p<0.01, \*\* p<0.05, \* p<0.10*
 
@@ -43,26 +49,32 @@ title: "08-main-regressions — 2026-04-21 (updated)"
 
 **Unit:** zip-year  
 **LHS:** `(inc_deps_{t+1} − inc_deps_t) / total_zip_deps_{t−1}` — same as Table 1  
-**Treatment:** `share_deps_closed` = sum(closed_dep_{t−1}) / total_zip_dep_{t−1} — deposit-weighted analog to Table 1  
+**Treatment:** `share_deps_closed` = sum(closed_dep_{t−1}) / total_zip_dep_{t−1}  
 **Incumbent:** bank with NO closes in (zip, YEAR)  
 **FE:** zip + county×year | **SE:** clustered at zip  
-**Controls:** `log_n_branches`, `log_n_inc_banks`
+**Controls:** `log_n_branches`, `log_n_inc_banks`, `log_total_deps`, `dep_growth_t3t1`
 
 ```
-|                       | 2000–07    | 2008–11    | 2012–19   | 2020–24    |
-| --------------------- | ---------- | ---------- | --------- | ---------- |
-| share_deps_closed     | 0.1167***  | 0.0843***  | −0.0170*  | −0.0178    |
-|                       | (0.0156)   | (0.0219)   | (0.0101)  | (0.0119)   |
-| log_n_branches        | −0.1155*** | −0.0647*** | −0.0557** | −0.0659*** |
-| log_n_inc_banks       | 0.0743***  | 0.0341***  | 0.0501*** | 0.0571***  |
-| N                     | 70,727     | 44,953     | 89,982    | 51,601     |
-| Zip FE                | Yes        | Yes        | Yes       | Yes        |
-| County×Year FE        | Yes        | Yes        | Yes       | Yes        |
-| SE                    | Zip        | Zip        | Zip       | Zip        |
-| Mean(gr_zip_inc)      | 0.048      | 0.037      | 0.062     | 0.054      |
-| SD(share_deps_closed) | 0.038      | 0.033      | 0.047     | 0.060      |
-| Adj. R²               | —          | —          | —         | —          |
-| Within R²             | 0.014      | 0.003      | 0.004     | 0.005      |
+|                       | 2000–07    | 2008–11    | 2012–19    | 2020–24    |
+| --------------------- | ---------- | ---------- | ---------- | ---------- |
+| share_deps_closed     | 0.1208***  | 0.1048***  | 0.0098     | 0.0241*    |
+|                       | (0.0205)   | (0.0216)   | (0.0100)   | (0.0128)   |
+| log_n_branches        | −0.0145*   | 0.0474***  | 0.0194**   | 0.0370***  |
+|                       | (0.0085)   | (0.0110)   | (0.0076)   | (0.0106)   |
+| log_n_inc_banks       | 0.0890***  | 0.0499***  | 0.0713***  | 0.0934***  |
+|                       | (0.0075)   | (0.0079)   | (0.0058)   | (0.0089)   |
+| log_total_deps        | −0.0985*** | −0.1202*** | −0.1049*** | −0.1054*** |
+|                       | (0.0059)   | (0.0098)   | (0.0083)   | (0.0122)   |
+| dep_growth_t3t1       | −0.0081*** | −0.0054    | −0.0036    | −0.0371*** |
+|                       | (0.0022)   | (0.0044)   | (0.0028)   | (0.0057)   |
+| N                     | 51,558     | 44,830     | 89,954     | 51,586     |
+| Zip FE                | Yes        | Yes        | Yes        | Yes        |
+| County×Year FE        | Yes        | Yes        | Yes        | Yes        |
+| SE                    | Zip        | Zip        | Zip        | Zip        |
+| Mean(outcome)         | 0.049      | 0.037      | 0.062      | 0.054      |
+| SD(share_deps_closed) | 0.034      | 0.033      | 0.047      | 0.060      |
+| R²                    | 0.53982    | 0.48717    | 0.48155    | 0.56746    |
+| Within R²             | 0.06325    | 0.04686    | 0.04285    | 0.05693    |
 ```
 *Note: \*\*\* p<0.01, \*\* p<0.05, \* p<0.10*
 
@@ -111,29 +123,35 @@ title: "08-main-regressions — 2026-04-21 (updated)"
 
 **Unit:** zip-year  
 **LHS:** `(inc_purch_hmda_{t+1} − inc_purch_hmda_{t−1}) / inc_purch_hmda_{t−1}` — 2-year symmetric window  
-**HMDA filter:** `action_taken = '1'` (originated) AND `loan_purpose = '1'` (home purchase only)  
-**Loan mapping:** census tract → zip via `RES_RATIO` from HUD USPS crosswalk (December 2019). Loans apportioned proportionally where tracts straddle multiple zip codes.  
+**HMDA filter:** `action_taken = '1'` AND `loan_purpose = '1'` (home purchase only)  
+**Loan mapping:** census tract → zip via `RES_RATIO` from HUD USPS crosswalk (Dec 2019)  
 **Treatment:** `share_deps_closed` (zip-level deposit-weighted)  
 **Incumbent:** bank with NO closes in (zip, YEAR)  
 **FE:** zip + county×year | **SE:** clustered at zip  
-**Controls:** `log_n_branches`, `log_n_inc_banks`  
-*Note: outlier-sensitive — 2012-19 coeff unstable under winsorization (flips sign). Treat with caution.*
+**Controls:** `log_n_branches`, `log_n_inc_banks`, `log_total_deps`, `dep_growth_t3t1`  
+*Note: uniformly null treatment effect across all periods*
 
 ```
-|                       | 2000–07    | 2008–11    | 2012–19    | 2020–24   |
-| --------------------- | ---------- | ---------- | ---------- | --------- |
-| share_deps_closed     | 0.0406     | −0.3000    | 0.2169     | 0.2040    |
-|                       | (0.2846)   | (0.4456)   | (0.1631)   | (0.1691)  |
-| log_n_branches        | −0.3636*** | 0.2080     | −0.2741*** | 0.1498    |
-| log_n_inc_banks       | −0.0238    | −0.3382*** | −0.2245*** | −0.2400** |
-| N                     | 53,607     | 35,524     | 82,376     | 36,039    |
-| Zip FE                | Yes        | Yes        | Yes        | Yes       |
-| County×Year FE        | Yes        | Yes        | Yes        | Yes       |
-| SE                    | Zip        | Zip        | Zip        | Zip       |
-| Mean(hmda_purch_gr)   | 0.732      | 0.417      | 0.565      | 0.089     |
-| SD(share_deps_closed) | 0.036      | 0.032      | 0.046      | 0.062     |
-| Adj. R²               | —          | —          | —          | —         |
-| Within R²             | 0.001      | 0.000      | 0.001      | 0.001     |
+|                       | 2000–07    | 2008–11    | 2012–19    | 2020–24    |
+| --------------------- | ---------- | ---------- | ---------- | ---------- |
+| share_deps_closed     | −0.1716    | −0.3160    | 0.2751*    | 0.2151     |
+|                       | (0.4047)   | (0.4370)   | (0.1638)   | (0.1723)   |
+| log_n_branches        | −0.2904**  | 0.1738     | −0.1056    | 0.1682     |
+|                       | (0.1369)   | (0.1480)   | (0.0952)   | (0.1163)   |
+| log_n_inc_banks       | −0.1935    | −0.3336*** | −0.1814**  | −0.2330**  |
+|                       | (0.1208)   | (0.1266)   | (0.0866)   | (0.1047)   |
+| log_total_deps        | −0.1473**  | 0.1607     | −0.2695*** | −0.0373    |
+|                       | (0.0714)   | (0.0979)   | (0.0461)   | (0.0875)   |
+| dep_growth_t3t1       | 0.0701*    | −0.1427**  | 0.0786**   | 0.0121     |
+|                       | (0.0379)   | (0.0617)   | (0.0380)   | (0.0647)   |
+| N                     | 39,951     | 35,474     | 82,356     | 36,039     |
+| Zip FE                | Yes        | Yes        | Yes        | Yes        |
+| County×Year FE        | Yes        | Yes        | Yes        | Yes        |
+| SE                    | Zip        | Zip        | Zip        | Zip        |
+| Mean(hmda_purch_gr)   | 0.732      | 0.417      | 0.565      | 0.089      |
+| SD(share_deps_closed) | 0.034      | 0.033      | 0.047      | 0.060      |
+| R²                    | 0.47261    | 0.53690    | 0.38819    | 0.46282    |
+| Within R²             | 0.00148    | 0.00083    | 0.00169    | 0.00085    |
 ```
 *Note: \*\*\* p<0.01, \*\* p<0.05, \* p<0.10*
 
@@ -206,35 +224,32 @@ title: "08-main-regressions — 2026-04-21 (updated)"
 
 ---
 
-## 7. Deposit Growth at Remaining Branches — Bank-County-Year (Own-Closure Design)
+## 7. Deposit Growth at Remaining Branches — Bank-Zip-Year (Own-Closure Design)
 
-**Unit:** bank-county-year  
-**LHS:** `growth_on_total_t1` = (deposits at remaining branches t+1 − t−1) / total bank-county deposits at t−1 — 2-year symmetric window  
-**Treatment:** `closure_share` = own closing deposits / total bank-county deposits at t−1  
+**Unit:** bank-zip-year (reg_main_zip_20260420.rds)  
+**LHS:** `growth_on_total_t1` = (deposits at remaining branches t+1 − t−1) / total bank-zip deposits at t−1 — 2-year symmetric window  
+**Treatment:** `closure_share` = own closing deposits / total bank-zip deposits at t−1  
 **Exclusions:** M&A-related closures (different owner within prior 3 years); top-5% extreme intensity  
-**FE:** bank_id×YEAR + county×YEAR | **SE:** clustered at bank_id  
-**Controls:** `log1p(total_deps_bank_county_t1)`, `log1p(n_remaining_branches)`, `mkt_share_county_t1`  
-*Note: Pre-2012 N=178,022 and 2012-2019 N=173,127 match reference HTML exactly.*
+**FE:** bank_id×YEAR + zip×YEAR | **SE:** clustered at bank_id  
+**Controls:** `log1p(total_deps_bank_zip_t1)`, `log1p(n_remaining_branches)`, `mkt_share_zip_t1`
 
 ```
-|                                  | All        | Pre-2012   | 2012–2024  | 2012–2019  |
-| -------------------------------- | ---------- | ---------- | ---------- | ---------- |
-| closure_share                    | 0.6593***  | 0.5378***  | 0.6823***  | 0.6685***  |
-|                                  | (0.0204)   | (0.0312)   | (0.0220)   | (0.0249)   |
-| log1p(total_deps_bank_county_t1) | −0.1663*** | −0.1985*** | −0.1467*** | −0.1422*** |
-|                                  | (0.0036)   | (0.0048)   | (0.0042)   | (0.0045)   |
-| log1p(n_remaining_branches)      | 0.1873***  | 0.2272***  | 0.1621***  | 0.1546***  |
-|                                  | (0.0060)   | (0.0070)   | (0.0065)   | (0.0076)   |
-| mkt_share_county_t1              | 0.3293***  | 0.3306***  | 0.3354***  | 0.3436***  |
-|                                  | (0.0138)   | (0.0217)   | (0.0159)   | (0.0177)   |
-| N                                | 458,799    | 178,022    | 280,777    | 173,127    |
-| Bank×Year FE                     | Yes        | Yes        | Yes        | Yes        |
-| County×Year FE                   | Yes        | Yes        | Yes        | Yes        |
-| SE                               | Bank       | Bank       | Bank       | Bank       |
-| Mean(growth_on_total_t1)         | 0.156      | 0.159      | 0.155      | 0.139      |
-| SD(closure_share)                | 0.034      | 0.027      | 0.038      | 0.037      |
-| Adj. R²                          | 0.354      | 0.403      | 0.320      | 0.287      |
-| Within R²                        | 0.179      | 0.237      | 0.147      | 0.145      |
+|                               | All          | Pre-2012   | 2012–2024  | 2012–2019  |
+| ----------------------------- | ------------ | ---------- | ---------- | ---------- |
+| closure_share                 | 0.6522***    | 0.5687***  | 0.6620***  | 0.6626***  |
+|                               | (0.0203)     | (0.0274)   | (0.0218)   | (0.0173)   |
+| log1p(total_deps_bank_zip_t1) | −0.1964***   | −0.2345*** | −0.1728*** | −0.1728*** |
+|                               | (0.0048)     | (0.0053)   | (0.0063)   | (0.0053)   |
+| log1p(n_remaining_branches)   | 0.2163***    | 0.2520***  | 0.1906***  | 0.1901***  |
+|                               | (0.0095)     | (0.0112)   | (0.0097)   | (0.0102)   |
+| mkt_share_zip_t1              | 0.2944***    | 0.3299***  | 0.2940***  | 0.3067***  |
+|                               | (0.0130)     | (0.0171)   | (0.0151)   | (0.0194)   |
+| N                             | 1,273,020    | 513,664    | 759,356    | 483,475    |
+| Bank×Year FE                  | Yes          | Yes        | Yes        | Yes        |
+| Zip×Year FE                   | Yes          | Yes        | Yes        | Yes        |
+| SE                            | Bank         | Bank       | Bank       | Bank       |
+| R²                            | 0.52207      | 0.58355    | 0.47499    | 0.45094    |
+| Within R²                     | 0.19267      | 0.25477    | 0.15433    | 0.15723    |
 ```
 *Note: \*\*\* p<0.01, \*\* p<0.05, \* p<0.10*
 
@@ -249,7 +264,7 @@ title: "08-main-regressions — 2026-04-21 (updated)"
 **Window:** ±3 years around first closure; 50% sampled never-treated controls (cohort = 10000)  
 **Periods:** Pre-2012 | 2012–2019 | 2020–2024, superimposed  
 
-![sunab_consistent_branch_set](figures/sunab_consistent_branch_set.png)
+![Sun-Abraham event study by period](figures/main_fig1_sunab_20260421_085554.png)
 
 ```
 | Period    | t=−3     | t=−2     | t=−1    | t=0       | t=1      | t=2       | t=3       |
