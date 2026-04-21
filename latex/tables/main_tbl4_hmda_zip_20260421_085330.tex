@@ -1,0 +1,33 @@
+\begingroup
+\centering
+\begin{tabular}{lcccc}
+   \tabularnewline \midrule \midrule
+   Dependent Variable: & \multicolumn{4}{c}{hmda\_purch\_growth\_zip}\\
+                         & 2000–07        & 2008–11         & 2012–19         & 2020–24 \\   
+   Model:                & (1)            & (2)             & (3)             & (4)\\  
+   \midrule
+   \emph{Variables}\\
+   share\_deps\_closed   & -0.1716        & -0.3160         & 0.2751$^{*}$    & 0.2151\\   
+                         & (0.4047)       & (0.4370)        & (0.1638)        & (0.1723)\\   
+   log\_n\_branches      & -0.2904$^{**}$ & 0.1738          & -0.1056         & 0.1682\\   
+                         & (0.1369)       & (0.1480)        & (0.0952)        & (0.1163)\\   
+   log\_n\_inc\_banks    & -0.1935        & -0.3336$^{***}$ & -0.1814$^{**}$  & -0.2330$^{**}$\\   
+                         & (0.1208)       & (0.1266)        & (0.0866)        & (0.1047)\\   
+   log\_total\_deps      & -0.1473$^{**}$ & 0.1607          & -0.2695$^{***}$ & -0.0373\\   
+                         & (0.0714)       & (0.0979)        & (0.0461)        & (0.0875)\\   
+   dep\_growth\_t3t1     & 0.0701$^{*}$   & -0.1427$^{**}$  & 0.0786$^{**}$   & 0.0121\\   
+                         & (0.0379)       & (0.0617)        & (0.0380)        & (0.0647)\\   
+   \midrule
+   \emph{Fixed-effects}\\
+   zip                   & Yes            & Yes             & Yes             & Yes\\  
+   county\_yr            & Yes            & Yes             & Yes             & Yes\\  
+   \midrule
+   \emph{Fit statistics}\\
+   Observations          & 39,951         & 35,474          & 82,356          & 36,039\\  
+   R$^2$                 & 0.47261        & 0.53690         & 0.38819         & 0.46282\\  
+   Within R$^2$          & 0.00148        & 0.00083         & 0.00169         & 0.00085\\  
+   \midrule \midrule
+   \multicolumn{5}{l}{\emph{Clustered (zip) standard-errors in parentheses}}\\
+   \multicolumn{5}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
+\end{tabular}
+\par\endgroup

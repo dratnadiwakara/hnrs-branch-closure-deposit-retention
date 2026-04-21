@@ -1,0 +1,30 @@
+\begingroup
+\centering
+\begin{tabular}{lcccc}
+   \tabularnewline \midrule \midrule
+   Dependent Variable: & \multicolumn{4}{c}{growth\_on\_total\_t1}\\
+   Model:                                & (1)             & (2)             & (3)             & (4)\\  
+   \midrule
+   \emph{Variables}\\
+   closure\_share                        & 0.6522$^{***}$  & 0.5687$^{***}$  & 0.6620$^{***}$  & 0.6626$^{***}$\\   
+                                         & (0.0203)        & (0.0274)        & (0.0218)        & (0.0173)\\   
+   log1p(total\_deps\_bank\_zip\_t1)     & -0.1964$^{***}$ & -0.2345$^{***}$ & -0.1728$^{***}$ & -0.1728$^{***}$\\   
+                                         & (0.0048)        & (0.0053)        & (0.0063)        & (0.0053)\\   
+   log1p(n\_remaining\_branches)         & 0.2163$^{***}$  & 0.2520$^{***}$  & 0.1906$^{***}$  & 0.1901$^{***}$\\   
+                                         & (0.0095)        & (0.0112)        & (0.0097)        & (0.0102)\\   
+   mkt\_share\_zip\_t1                   & 0.2944$^{***}$  & 0.3299$^{***}$  & 0.2940$^{***}$  & 0.3067$^{***}$\\   
+                                         & (0.0130)        & (0.0171)        & (0.0151)        & (0.0194)\\   
+   \midrule
+   \emph{Fixed-effects}\\
+   bank\_id-YEAR                         & Yes             & Yes             & Yes             & Yes\\  
+   zip-YEAR                              & Yes             & Yes             & Yes             & Yes\\  
+   \midrule
+   \emph{Fit statistics}\\
+   Observations                          & 1,273,020       & 513,664         & 759,356         & 483,475\\  
+   R$^2$                                 & 0.52207         & 0.58355         & 0.47499         & 0.45094\\  
+   Within R$^2$                          & 0.19267         & 0.25477         & 0.15433         & 0.15723\\  
+   \midrule \midrule
+   \multicolumn{5}{l}{\emph{Clustered (bank\_id) standard-errors in parentheses}}\\
+   \multicolumn{5}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
+\end{tabular}
+\par\endgroup
