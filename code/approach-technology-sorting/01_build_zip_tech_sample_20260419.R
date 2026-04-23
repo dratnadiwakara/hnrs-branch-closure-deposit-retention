@@ -190,9 +190,18 @@ perc_mob[, county := str_pad(as.character(county_fips), 5, "left", "0")]
 perc_mob[, YEAR   := as.integer(year)]
 setorder(perc_mob, county, -YEAR)
 perc_mob[, perc_hh_wMobileSub := nafill(perc_hh_wMobileSub, type = "locf"), by = county]
-perc_mob[, mob_2023 := perc_hh_wMobileSub[YEAR == 2023L][1L], by = county]
-perc_mob[YEAR > 2023L, perc_hh_wMobileSub := mob_2023]
-perc_mob[, mob_2023 := NULL]
+
+# Extend coverage past 2023 (raw source ends 2023). Synthesize rows for
+# 2024–2025 per county, copying the county's 2023 value.
+extend_years <- setdiff(2024L:2025L, unique(perc_mob$YEAR))
+if (length(extend_years)) {
+  mob_2023_tbl <- perc_mob[YEAR == 2023L, .(county, mob_2023 = perc_hh_wMobileSub)]
+  extra <- CJ(county = mob_2023_tbl$county, YEAR = extend_years)
+  extra <- merge(extra, mob_2023_tbl, by = "county", all.x = TRUE)
+  extra[, perc_hh_wMobileSub := mob_2023][, mob_2023 := NULL]
+  extra[, (setdiff(names(perc_mob), names(extra))) := NA]
+  perc_mob <- rbind(perc_mob, extra, use.names = TRUE, fill = TRUE)
+}
 
 zip_pan <- merge(zip_pan, perc_mob[, .(county, YEAR, perc_hh_wMobileSub)],
                  by = c("county", "YEAR"), all.x = TRUE)

@@ -64,6 +64,7 @@ Raw data is stored externally (OneDrive and empirical data drives) — not in `d
 
 ---
 
+
 ## Early-Stage Workflow
 
 ### Code Exploration: Named Approach Subfolders
@@ -74,9 +75,13 @@ When the paper direction is not yet settled, keep competing analytical approache
 code/
 ├── approach-a-did/         ← DiD specification explorations
 │   ├── 01_sample_20260401.R
-│   └── 02_main_spec_20260403.R
+│   ├── 02_main_spec_20260403.R
+│   ├── tables/             ← intermediate table output (.md only)
+│   └── figures/            ← intermediate figure output (.png, .pdf)
 ├── approach-b-iv/          ← IV alternative
-│   └── 01_first_stage_20260405.R
+│   ├── 01_first_stage_20260405.R
+│   ├── tables/
+│   └── figures/
 ├── sample-construction/    ← shared data prep (used by all approaches)
 ├── result-generation/      ← promoted scripts for the winning approach
 ├── archives/               ← discarded approaches (move here, don't delete)
@@ -88,42 +93,34 @@ code/
 - Name subfolders `approach-[descriptor]` (e.g., `approach-did`, `approach-iv-shift-share`).
 - Scripts inside follow the same date-suffix convention: `01_desc_20260401.R`.
 - Each approach folder may have its own `common_[slug].R` if it needs settings that differ from `code/common.R`.
-- When an approach is chosen: move its scripts into `code/result-generation/`, archive the rest to `code/archives/`.
+- **All intermediate outputs (tables and figures) stay inside the approach subfolder** — write to `code/approach-[name]/tables/` and `code/approach-[name]/figures/`, never to `latex/`.
+- The `latex/` directory is reserved for the final stage only. Do not write anything there until the user explicitly instructs promotion.
+- When an approach is chosen and finalized: copy tables to `latex/tables/` and figures to `latex/figures/`, then move scripts into `code/result-generation/`, archive the rest to `code/archives/`.
 - When an approach is abandoned: move its folder to `code/archives/` — do not delete.
 
 ### Result Snapshots
 
-Use `/skills/snapshot-results "slug"` to capture the current `latex/tables/` and `latex/figures/` into a versioned report under `docs/snapshots/`:
+Use `/skills/snapshot-results "slug"` to capture the current approach's `tables/` and `figures/` into a versioned report under `docs/snapshots/`. The skill looks for outputs in `code/approach-[name]/tables/` and `code/approach-[name]/figures/` — specify the approach name as an argument if needed.
 
 ```
 docs/snapshots/
 └── 20260409-approach-a-baseline/
     ├── index.md        ← report with embedded figures and rendered tables
-    ├── figures/        ← copies of latex/figures/*.png and *.pdf
-    └── tables/         ← markdown-rendered versions of latex/tables/*.tex
+    ├── figures/        ← copies of code/approach-[name]/figures/*.png and *.pdf
+    └── tables/         ← markdown-rendered versions of code/approach-[name]/tables/*.tex
 ```
 
-**When to snapshot:**
-
-- After completing a meaningful set of results (baseline spec, first pass at robustness).
-- Before changing a specification that will alter existing outputs.
-- When sharing preliminary findings with coauthors.
+**When to snapshot:** Only when the user explicitly requests it. Never snapshot automatically.
 
 **Workflow:**
 
 ```
 /skills/snapshot-results "approach-a-baseline"
+# → reads from code/approach-a-did/tables/ and code/approach-a-did/figures/
 # → creates docs/snapshots/20260409-approach-a-baseline/
 # → updates docs/index.md registry
 # → fill in the Summary section in index.md
-# → git add docs/ && git commit && git push
 ```
-
-### GitHub Pages (one-time setup)
-
-1. Go to repo **Settings → Pages → Source**: Deploy from a branch → Branch: `main`, Folder: `/docs`.
-2. After the first push to `docs/`, the site is live at `https://[username].github.io/[repo]/`.
-3. The landing page (`docs/index.md`) lists all snapshots. Each snapshot links to its own `index.md` with embedded figures and tables.
 
 ---
 
@@ -170,18 +167,54 @@ PYTHON_VENV_DOCLING = C:/envs/.docling_venv
 - Processed/constructed datasets go to `data/constructed/`.
 - Define `data_path <- "data/constructed/"` near the top of each analysis script.
 - Generate timestamped output filenames: `format(Sys.time(), "%Y%m%d_%H%M%S")`.
-- Include a comment in each script indicating which upstream script generated any imported dataset.
+
+### Data Lineage Comments
+
+Every script that reads a prebuilt `.rds` / `.parquet` / `.csv` from `data/` or `data/constructed/` must include a lineage comment block **immediately above** the `readRDS()` / `load_latest()` / `fread()` call. Format:
+
+```r
+# Source: <path to file, with YYYYMMDD placeholder if glob-loaded>
+# Built by:   <path to upstream build script>
+# Contents:   <one- or two-line description of key columns / sample>
+dt <- setDT(load_latest("data", "^zip_tech_sample_\\d{8}\\.rds$"))
+```
+
+Rules:
+
+- Build-script path must be clickable in the IDE (use the repo-relative path, e.g. `code/approach-[name]/sample-construction/B1_xxx.R`).
+- If the file touches external (OneDrive, duckdb) sources, document those too — either inline above the path constant, or in a block above `source()`.
+- When a single `00_common.R` is sourced by many scripts, the top of `00_common.R` should carry a full lineage map listing every consumed dataset and its upstream script.
+- When refactoring a folder (e.g. moving build scripts to a new location), update every lineage comment that references the old path — the comments are load-bearing documentation, not decoration.
 
 ### Figure & Table Export
 
-- Figures → `latex/figures/` as timestamped `.png` files with `bg = "transparent"`.
-- Tables → `latex/tables/` as `.tex` files with matching timestamps.
+- **During early-stage work (approach subfolders):** write outputs to the approach subfolder:
+  - Figures → `code/approach-[name]/figures/` as `.png` files with `bg = "transparent"`.
+  - Tables → `code/approach-[name]/tables/` as `.md` files only — **no `.tex` during exploration**.
+- **Final stage only (on explicit user instruction):** copy outputs to `latex/figures/` and `latex/tables/` (converting to `.tex` at that point).
+- Never write to `latex/` during exploratory or approach-stage work.
 - Control exports with logical flags at the top of each script:
-  
+
   ```r
   save_figures <- TRUE
   save_tables  <- TRUE
   ```
+
+### Regression Table Markdown Export
+
+For regression tables in approach subfolders, convert `etable()` output to markdown using `simplermarkdown::md_table()`:
+
+```r
+library(simplermarkdown)
+
+# etable() with tex=FALSE returns a data.frame
+et <- etable(m1, m2, tex = FALSE)
+writeLines(md_table(et), paste0(tables_path, "tab_name.md"))
+```
+
+- Always use `tex = FALSE` in `etable()` during exploration to get a data.frame, then pass to `md_table()`.
+- For descriptive stat tables, use `knitr::kable(df, format = "markdown")`.
+- Do **not** save `.tex` regression tables during exploration — markdown only.
 
 ### Visualization Standards
 
@@ -201,6 +234,47 @@ Apply `theme_custom()` (defined in `code/common.R`) to all ggplot2 plots. Use th
 - Define global formula macros with `setFixest_fml()` and global output options with `setFixest_etable()` **once** in `code/common.R`. Reuse them across analysis files — do not redefine per script.
 - Store model results in named lists (e.g., `r <- list(); r$baseline <- feols(...)`).
 
+### Regression Table Footer Rows
+
+Every regression table must include two footer rows below N: **Mean(DV)** and **SD(treatment)**.
+
+- `Mean(DV)`: mean of the dependent variable computed from the exact `data=` subset passed to `feols()` (after all sample filters and `na.omit`), rounded to 3 decimal places.
+- `SD(treatment)`: standard deviation of the key treatment variable (not controls) from the same subset, rounded to 3 decimal places.
+- Use the actual variable name as the label when cleaner (e.g., `Mean(gr\_branch)`, `SD(share\_deps\_closed)`).
+
+Compute inline before calling `feols()`:
+
+```r
+mean_dv  <- round(mean(data$dep_var,     na.rm = TRUE), 3)
+sd_treat <- round(sd(data$treatment_var, na.rm = TRUE), 3)
+```
+
+Add via `etable()` `extralines` argument or append manually to the exported `.tex`. Row order: **N → Mean(DV) → SD(treatment) → Within R²**.
+
+### Key Results Summary (print after generating regression tables)
+
+After a regression script finishes writing table files, print a concise key-coefficient summary in the chat as a Markdown table. This gives the user a fast overview without having to open each table file.
+
+**Format:**
+
+```
+| Outcome | Coef | SE | Sig | N |
+|---|---|---|---|---|
+| Δ Loans | -0.033 | 0.374 |  | 2,654 |
+| Δ Securities | 0.486 | 0.303 |  | 2,654 |
+| Δ log(A/Emp) | 0.023 | 0.008 | *** | 2,654 |
+| ... | ... | ... | ... | ... |
+```
+
+**Rules:**
+
+- One row per outcome (dependent variable). For multi-column tables in the same table file, list each column as a separate row.
+- Columns: **Outcome**, **Coef** (key endogenous/treatment coefficient, 3 decimals), **SE** (3 decimals), **Sig** (stars: `*` p<0.10, `**` p<0.05, `***` p<0.01; blank if not significant), **N**.
+- Below the table, report the first-stage F-statistic (for IV specifications) and flag any specification change from the prior run (e.g., controls added/removed, sample filter changed).
+- End with one short line (≤25 words) summarizing the overall pattern — not per-coefficient interpretation.
+- Do **not** repeat the full etable output (controls, fixed effects lines, SE type) — that lives in the saved `.md` file.
+- Do **not** print this summary for descriptive-stat tables (Table 1, Table 2 style) — only for regression tables.
+
 ### Quarto Documents
 
 - Use `type: source` in the Quarto YAML front matter so the document runs as a script without rendering to HTML/PDF.
@@ -213,49 +287,34 @@ Apply `theme_custom()` (defined in `code/common.R`) to all ggplot2 plots. Use th
 
 ### Exploratory Display Rule
 
-When displaying regression results or small DataFrames inline (exploratory snippets, intermediate diagnostics, checking results), use **plain-text formatted tables printed to stdout** — not Matplotlib pop-ups. This keeps results visible in the Claude Code conversation window without switching windows.
-
-**Regression table format** (use this pattern for pyfixest results):
+When executing code inline (e.g. `python -c "..."` or running a scratch snippet to answer "view/check/show me") and the result is a DataFrame with **< 100 rows and < 10 columns**, render it visually using Matplotlib:
 
 ```python
-coef_vars    = ["treatment_var", "control1", "control2"]   # ALL variables — treatment + controls
-var_labels   = ["Treatment", "Control 1", "Control 2"]
-header_labels = [lbl for lbl, m in models if m is not None]
-valid_models  = [m  for lbl, m in models if m is not None]
+import matplotlib.pyplot as plt
 
-print("\n" + "=" * 70)
-print("Table Title")
-print("FE: ... | SE clustered at ...")
-print("=" * 70)
-print(f"{'':25s}" + "".join(f"{h:>15s}" for h in header_labels))
-print("-" * 70)
-for var, lbl in zip(coef_vars, var_labels):
-    coef_row = f"{lbl:25s}"
-    se_row   = f"{'':25s}"
-    for m in valid_models:
-        try:
-            c = m.coef()[var]; s = m.se()[var]; p = m.pvalue()[var]
-            coef_row += f"{c:>+14.4f}{stars(p):1s}"
-            se_row   += f"{'(' + f'{s:.4f}' + ')':>15s}"
-        except KeyError:
-            coef_row += f"{'—':>15s}"; se_row += f"{'':>15s}"
-    print(coef_row)
-    print(se_row)
-print("-" * 70)
-n_row = f"{'N':25s}"
-for m in valid_models:
-    try:    n_row += f"{int(m._N):>15,}"
-    except: n_row += f"{'—':>15s}"
-print(n_row)
-print(f"{'FE':25s}" + f"{'<fe_spec>':>15s}" * len(valid_models))
-print("=" * 70)
+fig, ax = plt.subplots(figsize=(min(12, max(4, len(df.columns))), min(8, max(2, len(df) * 0.3 + 1))))
+ax.axis('off')
+tbl = ax.table(cellText=df.values, colLabels=df.columns, loc='center', cellLoc='center')
+tbl.auto_set_font_size(True)
+tbl.set_fontsize(10)
+fig.tight_layout()
+plt.show()
 ```
 
-**Always show all controls** in the table — not just the treatment variable. Every row in `coef_vars` / `var_labels` appears, including controls.
+**When to use:** User says "view", "check", "show", "what does X look like", or you are running exploratory one-off code to display a result.
 
-**Show intermediate results before moving on.** When diagnosing a problem (e.g., testing two normalization variants, comparing treatment specs), print the numbers for each variant before drawing a conclusion and changing the code. Do not skip to the final result without showing intermediates.
+**When NOT to use:** Writing or editing a `.py` script/file. Never embed `plt.show()` table pop-outs inside saved scripts — they are for interactive inspection only.
 
-**When NOT to use:** Never embed `plt.show()` pop-outs inside saved `.py` scripts. Text table prints inside saved scripts are fine.
+---
+
+## Session Memory
+
+`NOTES.md` files are written by the `/agents/session-debrief` agent after each work session. They summarize what was done, decisions made, and open threads.
+
+- `NOTES.md` in project root → high-level summary of overall paper progress
+- `NOTES.md` in subfolders (e.g., `code/approach-did/NOTES.md`) → focused notes specific to that directory's work
+
+Read relevant `NOTES.md` at session start to orient quickly. They are a supplement to — not a substitute for — reading code and git history when deeper context is needed.
 
 ---
 

@@ -9,6 +9,7 @@ title: Results
 
 | Date                                                          | Slug            | Notes |
 | ------------------------------------------------------------- | --------------- | ----- |
+| [2026-04-23](snapshots/20260423-approach-streamlined-20260423/index.md) | approach-streamlined-20260423 | |
 | [2026-04-18](snapshots/20260418-08-main-regressions/index.md) | key-regressions |       |
 
 ---
