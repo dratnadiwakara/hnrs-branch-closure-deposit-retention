@@ -5,7 +5,6 @@ title: "approach-streamlined-20260423 — 2026-04-23"
 
 # Version-20260423
 
-> 
 
 ---
 
@@ -17,7 +16,6 @@ title: "approach-streamlined-20260423 — 2026-04-23"
 **Incumbent:** bank with NO closes in (zip, YEAR); `!is.na(sophisticated)` filter applied
 **FE:** zip + county×year | **SE:** clustered at zip
 **Controls:** `log_n_branches`, `log_n_inc_banks`, `log_total_deps`, `dep_growth_t3t1`
-*Note: 2000–01 dropped (dep_growth_t3t1 lag).*
 
 ```
 |                             | 2000–07    | 2008–11    | 2012–19    | 2020–22    | 2023–24    |
@@ -54,7 +52,7 @@ title: "approach-streamlined-20260423 — 2026-04-23"
 **Incumbent:** bank with NO closes in (zip, YEAR)
 **FE:** zip + county×year | **SE:** clustered at zip
 **Controls:** `log_n_branches`, `log_n_inc_banks`, `log_total_deps`, `dep_growth_t3t1`
-*Note: Primary spec (§2 is the headline zip-year table). Pandemic split (2020–22 positive, 2023–24 null) supports digital-era interpretation of 2012–19.*
+
 
 ```
 |                       | 2000–07    | 2008–11    | 2012–19    | 2020–22    | 2023–24   |
@@ -95,7 +93,7 @@ title: "approach-streamlined-20260423 — 2026-04-23"
 
 **FE:** zip + county×year | **SE:** clustered at zip
 **Controls:** `log_n_branches`, `log_n_inc_banks`, `log_total_deps`, `dep_growth_t3t1`
-*Hypothesis: top-4 closures produce near-zero spillover; small-bank closures drive 2012–19 effect.*
+
 
 ```
 |                          | 2012–19    | 2020–22    | 2023–24   |
@@ -136,26 +134,29 @@ title: "approach-streamlined-20260423 — 2026-04-23"
 
 - `share_deps_closed_app` = deposits in non-top4 closing branches with mobile app / total deps
 - `share_deps_closed_noapp` = deposits in closing branches without mobile app / total deps
+- `share_deps_closed_top4` = deposits in top-4 (JPM/BAC/WFC/Citi) closing branches / total deps
 
 **FE:** zip + county×year | **SE:** clustered at zip
 **Controls:** `log_n_branches`, `log_n_inc_banks`, `log_total_deps`, `dep_growth_t3t1`
-*Hypothesis: app-bank closures produce less reallocation.*
+
 
 ```
 |                          | 2012–19    | 2020–22    | 2023–24   |
 | ------------------------ | ---------- | ---------- | --------- |
-| share_deps_closed_app    | 0.0267**   | 0.0576**   | −0.0066   |
-|                          | (0.0122)   | (0.0245)   | (0.0405)  |
-| share_deps_closed_noapp  | 0.0850***  | 0.0805     | 0.3881    |
-|                          | (0.0232)   | (0.0543)   | (0.3936)  |
-| log_n_branches           | 0.0148*    | 0.0350**   | −0.0087   |
-|                          | (0.0076)   | (0.0168)   | (0.0250)  |
-| log_n_inc_banks          | 0.0765***  | 0.0972***  | 0.0431**  |
-|                          | (0.0054)   | (0.0130)   | (0.0190)  |
-| log_total_deps           | −0.1051*** | −0.1002*** | −0.0418** |
-|                          | (0.0083)   | (0.0172)   | (0.0164)  |
-| dep_growth_t3t1          | −0.0035    | −0.0798*** | 0.0124    |
-|                          | (0.0028)   | (0.0094)   | (0.0086)  |
+| share_deps_closed_app    | 0.0224*    | 0.0681***  | −0.0129   |
+|                          | (0.0125)   | (0.0257)   | (0.0419)  |
+| share_deps_closed_noapp  | 0.0807***  | 0.0924*    | 0.3792    |
+|                          | (0.0233)   | (0.0548)   | (0.3930)  |
+| share_deps_closed_top4   | −0.0333**  | 0.0442**   | −0.0230   |
+|                          | (0.0141)   | (0.0217)   | (0.0273)  |
+| log_n_branches           | 0.0179**   | 0.0278     | −0.0035   |
+|                          | (0.0076)   | (0.0173)   | (0.0258)  |
+| log_n_inc_banks          | 0.0724***  | 0.1068***  | 0.0377*   |
+|                          | (0.0058)   | (0.0142)   | (0.0207)  |
+| log_total_deps           | −0.1048*** | −0.1022*** | −0.0405** |
+|                          | (0.0083)   | (0.0174)   | (0.0169)  |
+| dep_growth_t3t1          | −0.0035    | −0.0794*** | 0.0122    |
+|                          | (0.0028)   | (0.0095)   | (0.0087)  |
 | N                        | 89,954     | 31,052     | 20,304    |
 | Zip FE                   | Yes        | Yes        | Yes       |
 | County×Year FE           | Yes        | Yes        | Yes       |
@@ -163,7 +164,7 @@ title: "approach-streamlined-20260423 — 2026-04-23"
 | Mean(outcome)            | 0.062      | 0.073      | 0.025     |
 | SD(share_deps_closed)    | 0.047      | 0.064      | 0.053     |
 | R²                       | 0.482      | 0.652      | 0.609     |
-| Within R²                | 0.043      | 0.059      | 0.004     |
+| Within R²                | 0.043      | 0.059      | 0.005     |
 ```
 
 *Note: \*\*\* p<0.01, \*\* p<0.05, \* p<0.10*
@@ -178,7 +179,6 @@ title: "approach-streamlined-20260423 — 2026-04-23"
 **Interaction:** `share_deps_closed × perc_hh_wMobileSub`
 **FE:** zip + county×year | **SE:** clustered at zip
 **Controls:** `log_n_branches`, `log_n_inc_banks`, `log_total_deps`, `dep_growth_t3t1`
-*Note: `perc_hh_wMobileSub` LOCF-extended to 2024 (raw source ends 2023; 2024 values copy 2023 within-county). Interaction −0.160*** in 2012–19 (digital substitution), flips +0.512** in 2020–22 (pandemic channel reversal); 2023–24 sign matches 2020–22 (+1.698**) but coefficients large and noisy.*
 
 ```
 |                                        | 2012–19    | 2020–22    | 2023–24   |
@@ -216,7 +216,6 @@ title: "approach-streamlined-20260423 — 2026-04-23"
 **All channels simultaneously.** Separate coefficients for app, no-app, top4; interaction with mobile penetration on aggregate closure share.
 **FE:** zip + county×year | **SE:** clustered at zip
 **Controls:** `log_n_branches`, `log_n_inc_banks`, `log_total_deps`, `dep_growth_t3t1`
-*Note: mobile interaction flips sign post-2019 — digital substitution channel (2012–19) overtaken by pandemic channel reversal (2020–22, 2023–24).*
 
 ```
 |                                        | 2012–19    | 2020–22    | 2023–24    |
@@ -255,9 +254,6 @@ title: "approach-streamlined-20260423 — 2026-04-23"
 
 **Interaction:** `share_deps_closed × sophisticated` where `sophisticated` is a zip×year binary from the demographics panel (above-median education AND above-median dividend/capital-gain income).
 **Main effect of `sophisticated` included** (dropped in 2000–07 due to collinearity with zip FE).
-*2012–19 split into 2012–13 and 2014–19 to detect when sophistication heterogeneity emerges.*
-*Hypothesis: negative interaction in digital era — sophisticated depositors substitute to digital channels first.*
-*Note: carried over from 20260418 snapshot.*
 
 ```
 |                                    | 2000–07    | 2008–11    | 2012–13    | 2014–19    | 2020–24    |
@@ -288,8 +284,6 @@ title: "approach-streamlined-20260423 — 2026-04-23"
 
 *Note: \*\*\* p<0.01, \*\* p<0.05, \* p<0.10*
 
-*2012–13 transition: reallocation still present (0.090**), sophistication not yet a moderator (+0.009, n.s.). 2014–19: interaction turns negative and significant (−0.034**) — sophisticated zips show meaningfully less reallocation once digital adoption is widespread.*
-
 ---
 
 ## 8.1 HMDA All Purchase (Zip-Year)
@@ -299,7 +293,6 @@ title: "approach-streamlined-20260423 — 2026-04-23"
 **Treatment:** `share_deps_closed`
 **FE:** zip + county×year | **SE:** clustered at zip
 **Controls:** `log_n_branches`, `log_n_inc_banks`, `log_total_deps`, `dep_growth_t3t1`
-*Note: last column pooled 2020–23; 2024 growth needs 2025 LAR (unreleased) so year 2024 drops.*
 
 ```
 |                       | 2000–07   | 2008–11    | 2012–19    | 2020–23   |
@@ -336,7 +329,6 @@ title: "approach-streamlined-20260423 — 2026-04-23"
 **Treatment:** `share_deps_closed`
 **FE:** zip + county×year | **SE:** clustered at zip
 **Controls:** `log_n_branches`, `log_n_inc_banks`, `log_total_deps`, `dep_growth_t3t1`
-*Note: last column pooled 2020–23 (same reason as §8.1). Coefficient null across all periods — consistent with §8.1 purchase null.*
 
 ```
 |                       | 2000–07   | 2008–11   | 2012–19   | 2020–23   |
@@ -371,7 +363,6 @@ title: "approach-streamlined-20260423 — 2026-04-23"
 **LHS:** `hmda_purch_gr_sl` — 2-year growth of second-lien purchase originations
 **Treatment:** `share_deps_closed`
 **FE:** zip + county×year | **SE:** clustered at zip
-*Note: Phil suggestion #3. Large coefficients but large SEs (small denominator); all null across periods — reinforces pooled HMDA null.*
 
 ```
 |                       | 2004–07  | 2008–11  | 2012–19  | 2020–23  |
@@ -398,26 +389,6 @@ title: "approach-streamlined-20260423 — 2026-04-23"
 
 *Note: \*\*\* p<0.01, \*\* p<0.05, \* p<0.10*
 
-**Caveat — table not very informative.** Second-lien purchase originations are a tiny and unstable share of HMDA purchase activity. National shares by year (action=1, purpose=1):
-
-| year | % second-lien | year | % second-lien |
-|------|---------------|------|---------------|
-| 2000–03 | 0.0% (field not in LAR schema) | 2014 | 1.7% |
-| 2004 | 12.3% | 2015 | 1.6% |
-| 2005 | 18.6% | 2016 | 1.6% |
-| 2006 | 21.3% | 2017 | 1.9% |
-| 2007 | 13.0% | 2018 | 2.9% |
-| 2008 | 3.2% | 2019 | 3.0% |
-| 2009 | 1.7% | 2020 | 2.7% |
-| 2010 | 1.7% | 2021 | 2.5% |
-| 2011 | 1.8% | 2022 | 2.8% |
-| 2012 | 1.6% | 2023 | 3.4% |
-| 2013 | 1.5% | 2024 | 3.8% |
-
-`lien_status` flag absent pre-2004 (added in the 2004 LAR schema). 2005–07 HELOC/piggyback boom pushed shares to 19–21%; Dodd-Frank QM rules + HELOC freeze collapsed the category to 1.5–2% through 2017. 2018+ rebound to 3–4% is partly an artifact of the expanded HMDA reporting threshold that year.
-
-Given the tiny share (≤3.4% in every year 2008 onward), most zip-CERT cells have zero second-lien at t−1 or t+1 → 2-year growth undefined → heavy sample attrition (§9 N is 2–10% of §8 N). Coefficients noisy, all null. **Not a useful standalone test of lending spillovers** — the pooled §8 HMDA-all-purchase null is the primary evidence.
-
 ---
 
 ## 10. HMDA Jumbo Only (Zip-Year, 2012+)
@@ -426,7 +397,6 @@ Given the tiny share (≤3.4% in every year 2008 onward), most zip-CERT cells ha
 **LHS:** `hmda_purch_gr_jumbo`
 **Treatment:** `share_deps_closed`
 **FE:** zip + county×year | **SE:** clustered at zip
-*Note: Phil suggestion #4. CLL panel built from `C:/Users/dimut/OneDrive/github/shadow-bank-impact/data/raw/CLL` (14 xls files, 2012–2025). Null across periods — no jumbo spillover either.*
 
 ```
 |                       | 2012–19    | 2020–23   |
@@ -462,7 +432,6 @@ Given the tiny share (≤3.4% in every year 2008 onward), most zip-CERT cells ha
 **Treatment:** `share_deps_closed`
 **FE:** county + state×year | **SE:** clustered at county
 **Controls:** `log_n_branches`, `log_n_banks`, `log1p_total_deps`, `county_dep_growth_t4_t1`, `log_population_density`, `lag_county_deposit_hhi`, `lag_establishment_gr`, `lag_payroll_gr`, `lag_hmda_mtg_amt_gr`, `lag_cra_loan_amount_amt_lt_1m_gr`, `lmi`
-*Note: Phil suggestion #2 filter (in-county-branch respondents) is already implicit — `inc_set` is derived from SOD, which requires branch presence. Prior snapshot had separate in-county vs all-respondent panels; both sample to identical county-years and return identical coefficients, so consolidated here. 2024 dropped from last column (2025 CRA unreleased → year 2024 growth NA).*
 
 ```
 |                       | 2000–07   | 2008–11   | 2012–19   | 2020–23   |
@@ -496,7 +465,6 @@ Given the tiny share (≤3.4% in every year 2008 onward), most zip-CERT cells ha
 **Treatment:** `closure_share` — bank's zip-level closure intensity
 **FE:** bank×year + zip×year | **SE:** clustered at bank
 **Controls:** `log1p(total_deps_bank_zip_t1)`, `log1p(n_remaining_branches)`, `mkt_share_zip_t1`
-*Note: Panel data replaces earlier county-level specification (Phil #1). Retention is stable and large across all periods.*
 
 ```
 |                               | All        | Pre-2012   | 2012–19    | 2020–22    | 2023–24    |
@@ -530,7 +498,6 @@ Given the tiny share (≤3.4% in every year 2008 onward), most zip-CERT cells ha
 **Method:** Sun & Abraham (2021); cohort = first closure year; reference period = −1
 **FE:** unit_id + YEAR | **SE:** clustered at bank_id
 **Window:** ±3 years around first closure; periods superimposed: Pre-2012, 2012–2019, 2020–2024
-*Note: pre-trend absence validated (t=−2 small and flat across all periods). Pre-2012 post-event path reverses at t=+2/+3 (deposits not durably retained). Digital-era path persistent and monotone — retention dominates reallocation.*
 
 ![Sun & Abraham event study by era](figures/T6_sunab_eventstudy.png)
 

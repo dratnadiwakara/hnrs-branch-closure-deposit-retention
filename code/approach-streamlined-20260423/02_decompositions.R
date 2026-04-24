@@ -29,10 +29,10 @@ write_md(etable(m, headers = names(m), tex = FALSE,
 
 # §4 App decomposition
 m <- lapply(dsets, function(d) run(as.formula(paste0(
-  "outcome ~ share_deps_closed_app + share_deps_closed_noapp + ", CTRL)), d))
+  "outcome ~ share_deps_closed_app + share_deps_closed_noapp + share_deps_closed_top4 + ", CTRL)), d))
 write_md(etable(m, headers = names(m), tex = FALSE,
                 extralines = footer_mean_sd(dsets, "outcome", "share_deps_closed"),
-                order = c("share_deps_closed_app", "share_deps_closed_noapp")),
+                order = c("share_deps_closed_app", "share_deps_closed_noapp", "share_deps_closed_top4")),
          md_out("T4_app_decomposition"))
 
 # §5 Mobile interaction

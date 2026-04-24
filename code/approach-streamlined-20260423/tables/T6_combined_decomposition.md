@@ -20,7 +20,7 @@
 |dep_growth_t3t1                        |-0.0031    |-0.0815*** |0.0106     |
 |                                       |(0.0029)   |(0.0097)   |(0.0092)   |
 |Mean(outcome)                          |0.062      |0.073      |0.025      |
-|SD(share_deps_closed)                  |0.047      |0.064      |0.053      |
+|SD(treatment)                          |0.047      |0.064      |0.053      |
 |Fixed-Effects:                         |---------- |---------- |---------- |
 |zip                                    |Yes        |Yes        |Yes        |
 |county_yr                              |Yes        |Yes        |Yes        |
