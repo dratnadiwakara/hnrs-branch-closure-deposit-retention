@@ -1,0 +1,68 @@
+# manifest.yml — pinned inputs for approach-streamlined-v2-20260423.
+# Each entry is a prebuilt artifact consumed by v2 analysis scripts (01..06).
+# expect_rows + sha256 are populated after the first successful build and
+# enforced by 00_common.R::load_exact at every subsequent run.
+#
+# For interactive / exploratory runs: use load_latest_explore().
+# For paper-result runs: all scripts 01..06 MUST use load_exact with the pinned
+# path so mismatches fail loud.
+
+inputs:
+  zip_county_xwalk:
+    path: data/constructed/zip_county_xwalk_v2.rds
+    built_by: sample-construction/S1_build_zip_county_xwalk.R
+    expect_rows: null     # populate on first build
+    sha256: null
+
+  zip_tech_sample_v2:
+    path_pattern: data/constructed/zip_tech_sample_v2_*.rds
+    built_by: sample-construction/S2_build_zip_tech_sample.R
+    expect_rows: null
+    sha256: null
+
+  bank_zip_sample_v2:
+    path_pattern: data/constructed/bank_zip_sample_v2_*.rds
+    built_by: sample-construction/S3_build_bank_zip_sample.R
+    expect_rows: null
+    sha256: null
+
+  cra_panels_v2:
+    path_pattern: data/constructed/cra_panels_v2_*.rds
+    built_by: sample-construction/S4_build_cra_panels.R
+    expect_rows: null
+    sha256: null
+
+  hmda_panels_v2:
+    path_pattern: data/constructed/hmda_panels_v2_*.rds
+    built_by: sample-construction/S5_build_hmda_panels.R
+    expect_rows: null
+    sha256: null
+
+  sunab_panel_v2:
+    path_pattern: data/constructed/sunab_panel_v2_*.rds
+    built_by: sample-construction/S6_build_sunab_panel.R
+    expect_rows: null
+    sha256: null
+
+external_raw:
+  hud_zip_county:
+    path: C:/Users/dimut/OneDrive/data/ZIP_COUNTY_122019.xlsx
+    note: HUD ZIP-COUNTY crosswalk, Dec 2019. Columns ZIP, COUNTY (5-digit), TOT_RATIO.
+  hud_tract_zip:
+    path: data/raw/tract_zip_122019.xlsx
+    note: HUD TRACT-ZIP crosswalk, used by S5 for HMDA tract->zip apportionment.
+  closure_panel:
+    path: C:/Users/dimut/OneDrive/data/closure_opening_data_simple.rds
+    note: SOD branch-year panel with closed flag.
+  county_controls:
+    path: C:/Users/dimut/OneDrive/data/nrs_branch_closure/county_controls_panel.rds
+  bank_app_panel:
+    path: C:/Users/dimut/OneDrive/data/CH_full_app_reviews_panel.csv
+    note: Bank app availability panel. Raw ends 2021; LOCF-extended via extend_county_year_locf.
+  mobile_panel:
+    path: data/raw/perc_hh_wMobileSub.csv
+    note: ACS mobile subscription share. Raw ends 2023 in source; LOCF to 2025.
+  hmda_db:
+    path: C:/empirical-data-construction/hmda/hmda.duckdb
+  cra_db:
+    path: C:/empirical-data-construction/cra/cra.duckdb

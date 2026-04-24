@@ -60,6 +60,18 @@ You are a copy editor at a top economics journal. Read all .tex files in the fol
    - "This paper contributes to the literature by..." — show, don't tell
    - Passive voice where active is natural ("it is shown that" → "we show that")
    - Inconsistent first person ("we find" in some places, "the paper argues" in others)
+   - **Cochrane (2005) §2 phrases** — flag and recommend deletion or rewrite:
+     - "in other words" — restate the prior sentence cleanly instead.
+     - "it should be noted that", "it is easy to show that", "a comment is in order at this point" — kill the preamble; just make the point.
+     - "It is clear that…", "There is X that…" — strike everything before "that".
+     - Naked "this" at sentence start ("This shows that…") with no following noun — clothe it.
+     - Adjectives on own work: "striking results", "very significant", "remarkable", "fascinating", "novel" — let the world give you the adjectives.
+     - Sign-of-effect parens: "X increases (decreases) when Y decreases (increases)" — pick one direction.
+     - "models where" describing a model — use "in which".
+     - Author-name abbreviations ("FF show", "DKS find") — spell out.
+     - "I leave X for future research" / "this opens avenues for future work" / "future research could explore" — strike.
+     - "illustrative empirical work" — never. Do real work or none.
+     - "we assume that consumers have power utility" describing model structure — drop "assume"; just state the model.
 
 5. **Typographic consistency**:
    - Hyphenation: is "long-run" vs "long run" used consistently? Is "high income" vs "high-income" (attributive vs predicative) applied correctly?

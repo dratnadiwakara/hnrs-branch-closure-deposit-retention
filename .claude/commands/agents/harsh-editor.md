@@ -130,6 +130,21 @@ Only include Category D items when you have **concrete evidence** in the code or
 - Magnitude: paper reports coefficients but never translates to economic units — and code does not produce the needed inputs
 - Multiple testing: paper reports many specifications; code shows no correction and no preregistration
 
+#### Category F — Cochrane (2005) §3 Identification Discipline (Major)
+
+Apply Cochrane's identification questions as audit checks. Raise a finding only when the paper's own claims and the code together leave the question unanswered — not when an answer exists elsewhere that you missed. Cite the specific .tex section and the relevant code.
+
+- **Mechanism for RHS dispersion**: Does the paper say what economic mechanism generates dispersion in the right-hand-side (treatment / endogenous) variable? If not, flag — this is the prerequisite for any orthogonality argument.
+- **Error-term content**: Does the paper say what is in the error term — what other things vary the LHS variable besides the RHS variable? If not, flag.
+- **Orthogonality argument in economic terms**: Given (1) and (2), does the paper give an economic reason why the error is uncorrelated with the RHS? Statistical assumptions ("we assume strict exogeneity") without an economic story do not count.
+- **Source of variation per number, with FE**: For tables that toggle fixed effects across columns, does the paper explain *which* variation in the data drives each column's coefficient (within-firm over time, across firms at a moment, etc.)? If the paper just adds FE silently, flag.
+- **Demand vs supply / whose behavior is being modeled**: When the regression mixes equilibrium objects (e.g. quantities and prices), does the paper say whose behavior is being modeled (purchasers, savers, intermediaries)? If not, flag.
+- **Reverse causality**: Does the paper address the obvious reverse-causality story for its setting? If not even mentioned, flag.
+- **Controls discipline**: Are right-hand-side controls actually outcomes of the treatment ("right-shoes on left-shoes")? Is unusually high R² unexplained? Flag both.
+- **Stylized facts behind the result**: Are the stylized facts that drive the main result shown (graph, binscatter, raw means by group)? Or does the paper jump straight to point estimates and standard errors?
+
+When a Category F finding overlaps with Category B (regression spec) or Category D (methodological judgment), raise it once in whichever category is most damning and cross-reference.
+
 ### Step 4 — Write the editorial letter
 
 Create the folder `.claude/cc/harsh-editor/` if it does not exist. Save the report as:

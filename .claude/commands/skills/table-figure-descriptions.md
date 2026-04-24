@@ -43,6 +43,11 @@ For **figures**:
 - **Do not omit variable definitions** — any transformed variable (logs, indicators, interactions) must be defined.
 - **Do not use vague language** — "appropriate controls" or "standard fixed effects" are not acceptable when the specification itself is the focus; in such cases, clearly describe how the specification differs from the baseline rather than listing every control.
 
+### Numerical formatting (Cochrane 2005 §2 — Tables)
+- **Significant digits**: 2–3 sig figs, not whatever the program prints. `4.56783 (0.6789)` becomes `4.6 (0.7)`. Flag any cell with > 3 sig figs and propose the rounded value in the suggested note or caption.
+- **Sensible units**: prefer percentages, basis points, log points, thousands, or millions over raw decimals. Do not report `0.0000023` when `2.3` (with units) reads instantly. If the column is in raw units that produce extreme values, note the unit choice in the suggested caption and recommend a rescaling.
+- **Regression-equation in caption**: for regression tables, the caption (or the note) must include the regression equation or an explicit `\eqref{}` to it, plus the name of the left-hand-side variable. Flag captions that name only the table topic (e.g. "Main results") without identifying the LHS variable or the equation.
+
 ### Tone and length
 - Write in third-person, present tense, declarative sentences.
 - Notes are typically 3–8 sentences. Complex tables with multiple panels or many columns may run longer.

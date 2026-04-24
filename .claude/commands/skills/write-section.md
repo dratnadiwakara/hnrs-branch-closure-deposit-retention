@@ -33,6 +33,9 @@ Before writing any section, Claude Code should collect or confirm:
 - **Third-person, present-tense exposition** for describing methods and results ("We estimate...", "Column 3 shows..."). First-person plural ("we") is standard.
 - **Assertive but not overconfident**. State findings directly without excessive hedging ("seems to suggest", "appears to possibly indicate"), but do not overclaim. No empirical paper is airtight—there are always alternative explanations. Acknowledge the most plausible ones honestly rather than burying them. Do not write as though the identification is perfect or the evidence is definitive when it is not. Sophisticated readers will notice overselling; it undermines credibility.
 - **No filler or throat-clearing**. Every sentence should either (a) convey information, (b) build the argument, or (c) connect the reader to the next idea. Delete sentences that merely announce what will come next without adding content.
+- **Cochrane's "no warmup" rule**. Nothing before the main result of a section that the reader does not need to read in order to understand the main result. No replication of well-known datasets, no preliminary estimates, no descriptive-statistics travelogue placed in front of the main result.
+- **No previews or recalls**. Avoid "as we will see in Table 6" and "recall from Section 2." If you find yourself writing one, the order is wrong; fix the order.
+- **No adjectives on your own work**. No "striking results," "very significant" coefficients, "interesting findings." Cochrane: "If the work merits adjectives, the world will give them to you."
 - **Only write what is actually in the code and results**. Before drafting, read the code files in `code/` and the output files in `latex/tables/` and `latex/figures/`. Do not claim a robustness check, alternative specification, placebo test, or mechanism test was run unless there is a corresponding script and output file. Never write sentences like "results are robust to alternative specifications" or "we also find consistent results using X" if that analysis does not exist in the code.
 - **Assume a sophisticated reader**. Do not explain what a fixed effect is, what a DiD does in general terms, or how OLS works. Explain *your* specification choices and why they are appropriate for *your* setting.
 
@@ -103,8 +106,10 @@ Before writing any section, Claude Code should collect or confirm:
 - **Length**: 6–10 pages.
 
 #### Conclusion
-- **One page maximum**. Summarize findings, state the policy implication, acknowledge limitations, suggest future work. Do not introduce new results or arguments.
+- **One page maximum**. One short restate of the result, then the broadest implication that the design supports. Cochrane (2005): "We're less interested in your plans and excuses than we are in your memoirs."
+- **Do not introduce new results or arguments.**
 - **Do not repeat the introduction**. The conclusion should feel like a coda, not a remix.
+- **No "future research" punch list**. Drop sentences of the form "We leave X for future research," "Future research could explore Y," "This opens several avenues for future work." If a thread is genuinely open, name it in one clause and move on; do not draft a grant proposal here.
 - **End with the broadest implication**: why should anyone outside the sub-field care?
 
 #### Appendix

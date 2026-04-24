@@ -48,53 +48,59 @@ For empirical papers, use:
 
 ### Step 3: Apply Economics Writing Conventions
 
-- **First paragraph** should state the research question and main finding
+- **First paragraph** opens with the result, stated concretely (give the fact, not the conclusion). Cochrane (2005) §1.
+- **Nothing before the main result** that the reader does not need to read in order to understand it. No warmup exercises, no extensive description of well-known datasets, no replications of others' work in the body.
 - **Use present tense** for established facts, past tense for your findings
 - **Be precise** with causal language (effect vs. association)
-- **Cite heavily** in the literature review
+- **Generous, focused** literature review: 2–3 closest papers, set off so a reader can skip if they want.
 - **Lead with results** in the results section
+- **No "future research" punch list** in the conclusion. Cochrane: "We're less interested in your plans than your memoirs."
+- **No adjectives on your own work** — no "striking results," no "very significant," no "interesting finding." Let the world give you the adjectives.
 
 ## Example Output: Introduction Template
+
+Cochrane (2005) §1: open with the contribution. Skip philosophy, "the literature has long…",
+policy-importance preludes, and quotations. Give the fact behind the result, not just the
+conclusion.
 
 ```latex
 \section{Introduction}
 
-% Hook - Why does this matter?
-[TOPIC] is a fundamental question in economics, with implications for 
-[POLICY AREA] and [BROADER RELEVANCE]. Despite extensive research, 
-we still lack clear evidence on [SPECIFIC GAP].
+% Open with the result — give the fact, not the conclusion.
+We show that [CONCRETE RESULT WITH NUMBERS: e.g., "a one-standard-deviation
+increase in X is associated with a Y basis-point change in Z"]. This holds
+in [SAMPLE: unit, period, source] using [IDENTIFICATION: natural experiment /
+shift-share IV / RDD / staggered DiD]. The estimate is robust to 
+[ONE OR TWO MOST IMPORTANT CHECKS] and survives [MOST OBVIOUS THREAT].
 
-% Research question
-This paper asks: [RESEARCH QUESTION IN PLAIN LANGUAGE]? 
-Specifically, we examine whether [PRECISE FORMULATION OF THE QUESTION].
+% Why this is hard / why prior work could not answer it.
+The question is hard because [CONCRETE OBSTACLE: identification, data
+availability, measurement]. [1–2 sentences on what new variation, data,
+or method this paper brings to the question.]
 
-% Preview of answer
-We find that [MAIN RESULT IN ONE SENTENCE]. This effect is 
-[economically significant / modest / heterogeneous], with 
-[QUANTITATIVE SUMMARY: e.g., "a one standard deviation increase 
-in X associated with a Y percent increase in Z"].
+% Mechanism / interpretation, in one paragraph, with the key piece of evidence.
+The effect operates through [CHANNEL]. [Cite the column/figure that shows
+the channel — not "we explore mechanisms in Section X".]
 
-% Methodology (brief)
-To identify this effect, we exploit [IDENTIFICATION STRATEGY: 
-natural experiment / RCT / instrumental variable / RDD]. 
-Our data come from [DATA SOURCE], covering [TIME PERIOD] 
-and [SAMPLE SIZE] observations.
+% Contribution relative to 2–3 closest papers — generous, specific, brief.
+This paper builds on \citet{Author2020} and \citet{OtherAuthor2019}; we
+differ in that [SHARP, CONCRETE DIFFERENCE — sample, design, or object of
+inference]. We are not the first to study [TOPIC]; we are the first to
+[SPECIFIC CLAIM TIED TO THE NEW VARIATION OR DATA].
 
-% Contribution / Related literature
-Our paper contributes to several strands of literature. 
-First, we extend the work of \citet{Author2020} by [EXTENSION]. 
-Second, we provide new evidence on [MECHANISM/CHANNEL] that 
-complements \citet{OtherAuthor2019}. Finally, our findings 
-have implications for [POLICY/FUTURE RESEARCH].
-
-% Roadmap
-The remainder of the paper is organized as follows. 
-Section~\ref{sec:background} provides background and reviews 
-related literature. Section~\ref{sec:data} describes our data 
-and empirical strategy. Section~\ref{sec:results} presents our 
-main findings. Section~\ref{sec:robustness} discusses robustness 
-checks. Section~\ref{sec:conclusion} concludes.
+% Roadmap is OPTIONAL (Cochrane). Omit unless the paper's organization is
+% non-obvious. If kept, one short sentence — not a section-by-section table
+% of contents.
 ```
+
+**What this template avoids** (Cochrane violations the old template made):
+- "[TOPIC] is a fundamental question in economics" → throat-clearing.
+- "Despite extensive research, we still lack clear evidence on…" → bait
+  framing; says nothing concrete.
+- "Our paper contributes to several strands of literature. First, … Second,
+  …" → contribution-list; the contribution should be the result itself,
+  stated up front.
+- Mandatory roadmap paragraph → optional, often a waste of space.
 
 ## Example Output: Results Section Template
 
@@ -153,30 +159,20 @@ R-squared      & 0.05   & 0.12  & 0.35  & 0.35  \\
 
 ## Example Output: Conclusion Template
 
+Cochrane (2005) §1: conclusions short. No restate of findings beyond one
+sentence. No "future research" punch list — "We're less interested in your
+plans than your memoirs."
+
 ```latex
 \section{Conclusion}
 \label{sec:conclusion}
 
-% Restate question and answer
-This paper examined [RESEARCH QUESTION]. Using [METHOD/DATA], 
-we found that [MAIN FINDING]. This result is robust to 
-[ROBUSTNESS CHECKS].
+% One-sentence restate of the result.
+[ONE-SENTENCE RESULT, paraphrased — not copied — from the abstract.]
 
-% Implications
-Our findings have several implications. For policy, they suggest 
-that [POLICY IMPLICATION]. For theory, they provide support for 
-[THEORETICAL MECHANISM] and challenge [ALTERNATIVE VIEW].
-
-% Limitations (brief, honest)
-Several limitations warrant mention. First, [LIMITATION 1: 
-e.g., external validity]. Second, [LIMITATION 2: e.g., 
-data constraints]. Future research could address these by 
-[SUGGESTION].
-
-% Future directions
-This paper opens several avenues for future work. 
-[DIRECTION 1]. [DIRECTION 2]. We hope our findings 
-stimulate further research on [BROADER TOPIC].
+% One short paragraph on the broadest implication that the design actually
+% supports. No speculation, no policy advocacy, no "future research" list.
+[IMPLICATION TIED DIRECTLY TO WHAT THE DESIGN IDENTIFIES.]
 ```
 
 ## Writing Tips

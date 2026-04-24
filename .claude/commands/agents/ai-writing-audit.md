@@ -60,6 +60,18 @@ Work through all categories below. For each issue found, record:
 - Significance announcement: "Interestingly,", "Surprisingly,", "Importantly," at sentence start (> 1 per 500 words)
 - Reasoning chain artifacts: "Working through this logically", "Breaking this down"
 
+**P1 – Cochrane (2005) §2 tells** (also flag at P1 — these are author-quality tells, not just AI tells)
+- Adjectives on own work: "striking results", "very significant", "remarkable", "fascinating", "novel finding". Cochrane: "If the work merits adjectives, the world will give them to you."
+- "in other words" — restate the prior sentence cleanly.
+- "it should be noted that", "it is easy to show that", "a comment is in order at this point" — kill the preamble.
+- Naked "this" at sentence start ("This shows that…") with no following noun.
+- "I leave X for future research", "this opens avenues for future work", "future research could explore" — strike.
+- "illustrative empirical work" / "illustrative test" — never.
+- "we assume that consumers have power utility" describing model structure — drop "assume"; just state the model. Reserve "assume" for genuine identifying assumptions about the world.
+- "models where" describing a model — should be "models in which".
+- Author-name abbreviations ("FF show", "DKS find") — spell out.
+- Cute opening quotation in §1 (`\epigraph`, leading `\begin{quote}`, italicized quote at very top of intro).
+
 **P2 – Stylistic polish** (weakens prose, signals non-expert authorship)
 - Cluster-flag (2+ in same paragraph): harness, navigate, foster, elevate, unleash, streamline, empower, bolster, spearhead, resonate, revolutionize, facilitate, cultivate, illuminate, elucidate, catalyze, reimagine, galvanize, augment, juxtapose, burgeoning, quintessential
 - High-density flag: significant (> 3 per page), innovative, unprecedented, exceptional, remarkable, sophisticated, instrumental

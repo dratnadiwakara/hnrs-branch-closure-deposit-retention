@@ -106,6 +106,13 @@ Also check consistency for:
 - Time windows and sample descriptors,
 - Capitalization and formatting of key terms/variables.
 
+### 3.3.1 Cochrane (2005) micro-flags
+Add the following lightweight checks when scanning prose:
+- **Footnotes** — open every `\footnote{}` and ask: is this a parenthetical aside? Cochrane: footnotes only for material the typical reader can skip but a few might want (long citation lists, side derivations, documentation). Flag footnotes that are one short editorial remark with no citation, formula, or concrete documentation.
+- **Italics overuse** — count `\textit{}` and `\emph{}` per page. More than ~5 per page → flag and suggest restructuring sentences so the emphasis is carried by word order.
+- **Naked Greek letters** — flag any Greek symbol (`\alpha`, `\beta`, `\theta`, …) used in prose with no nearby definition (`= …`, `\equiv`, "where …", or a named gloss in the same or prior paragraph).
+- **Abbreviated author names** — patterns like `\bFF\b`, `\bDKS\b`, `\bGW\b` standing for an author pair where the bib entry exists. Spell them out.
+
 ### 3.4 Figures and tables: text vs exhibits
 For each identifiable figure/table:
 - Read the **caption** and key in-text description.

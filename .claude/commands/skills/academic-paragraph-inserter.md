@@ -27,8 +27,13 @@ else** in the manuscript.
 Before inserting any text, internalize these norms:
 
 **Voice and tense**
-- Academic economics papers use **first-person plural** ("We show", "We find", "Our results")
-  even for single-authored papers — never "I". Use third-person only when referring to others.
+- **Voice is authorship-conditional.** Read the project `CLAUDE.md` and locate the
+  `**Authorship**:` field.
+  - `solo` → use **first-person singular** ("I show", "I find", "My results"), per
+    Cochrane (2005) §2 ("'I' is fine. Don't use the royal 'we' on a sole-authored paper").
+  - `coauthored` (default if the field is missing or unrecognized) → use **first-person
+    plural** ("We show", "We find", "Our results").
+  Use third-person only when referring to others.
 - Use **present tense** for statements about the paper ("we find", "Table 3 shows") and for
   economic claims that are general truths ("firms that are more levered pay higher spreads").
 - Use **past tense** for describing what you did ("we collected", "we estimated").
@@ -45,6 +50,26 @@ Before inserting any text, internalize these norms:
 - Avoid weasel words: "somewhat", "relatively", "appears to", "seems to". State the finding
   directly.
 - Define any new variable or term the first time it appears in the insertion.
+
+**Cochrane (2005) micro-rules — apply to every insertion**
+- Kill "in other words" — if the prior sentence needed a restate, fix the prior sentence.
+- Kill "it should be noted that", "it is worth noting that", "it is easy to show that". Just
+  state the point.
+- Strike everything before "that" in sentences of the form "It is clear that…", "There is X
+  that…". Lead with the noun.
+- Clothe naked "this" — never start a sentence with "This shows…" / "This implies…" without
+  a following noun ("This regression shows…", "This pattern implies…").
+- "Where" refers to a place; "in which" refers to a model. Write "models in which", not
+  "models where".
+- No double adjectives ("very significant", "highly novel"). No adjectives on own work
+  ("striking", "remarkable", "fascinating").
+- For a causal sign, use one direction. Do not write "X increases (decreases) when Y
+  decreases (increases)"; write the up-direction once, add "and vice versa" if needed.
+- No "I leave X for future research" / "this opens avenues for future work."
+- Do not abbreviate author names ("FF" → "Fama and French"; "DKS" → spell it out).
+- Do not "assume" a model structure when stating it. Write "consumers have power utility,"
+  not "we assume that consumers have power utility." Reserve "assume" for genuine
+  identifying assumptions about the world.
 
 **Citation style**
 - Use author-year in parentheses: "(Fama and French, 1992)" or inline: "Fama and French
@@ -115,7 +140,7 @@ Write the sentence or paragraph. Apply these checks before finalizing:
 - [ ] Transitions are specific, not mechanical ("Furthermore", "Moreover")
 
 **Style checks:**
-- [ ] Voice matches surrounding text (first-person plural)
+- [ ] Voice matches surrounding text and the project `## Authorship` setting (solo → "I"; coauthored → "we")
 - [ ] Tense is consistent with surrounding text
 - [ ] Sentence length is similar to the author's style
 - [ ] No padding, weasel words, or unnecessary hedging
