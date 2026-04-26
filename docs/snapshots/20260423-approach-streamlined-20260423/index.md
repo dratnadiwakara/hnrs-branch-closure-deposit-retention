@@ -398,28 +398,32 @@ title: "approach-streamlined-20260423 — 2026-04-23"
 **Treatment:** `share_deps_closed`
 **FE:** zip + county×year | **SE:** clustered at zip
 
+> **Updated 2026-04-26:** Fixed jumbo SQL — local HMDA DuckDB stores `loan_amount` in dollars across all years (not thousands pre-2018), so the prior `loan_amount * 1000 > cll_1unit` test passed for ~every loan. Pre-fix Panel C was effectively all-purchase (cor with Panel A1 = 0.96 at zip-year 2012+). Rebuilt panel — N drops from 121,217 to 42,719 zip-year observations with valid jumbo growth.
+
 ```
-|                       | 2012–19    | 2020–23   |
-|-----------------------|------------|-----------|
-| share_deps_closed     | −0.0599    | 0.2072    |
-|                       | (0.1396)   | (0.1539)  |
-| log_n_branches        | 0.0485     | 0.1550    |
-|                       | (0.0801)   | (0.1023)  |
-| log_n_inc_banks       | −0.2658*** | −0.1892** |
-|                       | (0.0747)   | (0.0933)  |
-| log_total_deps        | −0.0680*   | −0.0351   |
-|                       | (0.0392)   | (0.0798)  |
-| dep_growth_t3t1       | 0.0094     | −0.0005   |
-|                       | (0.0310)   | (0.0573)  |
-| N                     | 72,585     | 36,039    |
-| Zip FE                | Yes        | Yes       |
-| County×Year FE        | Yes        | Yes       |
-| SE                    | Zip        | Zip       |
-| Mean(outcome)         | 0.340      | 0.050     |
-| SD(share_deps_closed) | 0.047      | 0.062     |
-| R²                    | 0.336      | 0.467     |
-| Within R²             | 0.001      | 0.001     |
+|                       | 2012–19  | 2020–23  |
+|-----------------------|----------|----------|
+| share_deps_closed     | −0.230   | 1.552    |
+|                       | (1.417)  | (1.393)  |
+| log_n_branches        | −0.219   | −0.957   |
+|                       | (0.816)  | (1.111)  |
+| log_n_inc_banks       | −0.247   | 1.012    |
+|                       | (0.764)  | (0.872)  |
+| log_total_deps        | 0.104    | 0.196    |
+|                       | (0.456)  | (0.394)  |
+| dep_growth_t3t1       | −0.378   | −0.279   |
+|                       | (0.317)  | (0.400)  |
+| N                     | 26,105   | 11,005   |
+| Zip FE                | Yes      | Yes      |
+| County×Year FE        | Yes      | Yes      |
+| SE                    | Zip      | Zip      |
+| Mean(outcome)         | 2.162    | 1.567    |
+| SD(share_deps_closed) | 0.047    | 0.062    |
+| R²                    | 0.405    | 0.510    |
+| Within R²             | 0.0001   | 0.0003   |
 ```
+
+**Read:** Coefficients null in both periods (n.s.). Mean jumbo growth substantially higher (2.2 / 1.6) than the prior contaminated panel (0.34 / 0.05) — true jumbo segment has fewer, more volatile zip-years per anchor pair, which inflates the growth distribution.
 
 *Note: \*\*\* p<0.01, \*\* p<0.05, \* p<0.10*
 

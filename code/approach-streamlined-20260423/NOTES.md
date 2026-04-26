@@ -148,3 +148,33 @@ N(all): 231504 | N(second-lien): 38314 | N(jumbo, 2012+): 121217
 Built combined panel with four HMDA outcomes at zip-year: all purchase, second-lien, jumbo, refinance.
 Saved: `data/constructed/hmda_zip_panels_20260423.rds`.
 N(all): 231504 | N(second-lien): 38314 | N(jumbo, 2012+): 121217 | N(refi): 234823
+
+## B1 — HMDA zip-year panels — 2026-04-26 07:51
+
+Built combined panel with four HMDA outcomes at zip-year: all purchase, second-lien, jumbo, refinance.
+Saved: `data/constructed/hmda_zip_panels_20260426.rds`.
+N(all): 231504 | N(second-lien): 38314 | N(jumbo, 2012+): 42719 | N(refi): 234823
+
+## 2026-04-26 — HMDA jumbo unit fix
+
+Coauthor (Charlotte) flagged HMDA `loan_amount` units (pre-2018 thousands vs 2018+ dollars).
+Investigation: local `C:/empirical-data-construction/hmda/hmda.duckdb` already stores
+`loan_amount` in **dollars across all years** (verified: median ≈$200K in both 2016 and
+2018; min $1K–$5K throughout; the duckdb build pre-converted pre-2018 thousand-units).
+
+Bug: `B1_hmda_zip_panels_20260423.R` lines 171 + 183 multiplied loan_amount by 1000 in
+both pre-2018 and 2018+ jumbo branches. Test `loan_amount * 1000 > cll_1unit` therefore
+passed for ~every loan in every year. Effect: pre-fix Panel C (jumbo) was effectively
+all-purchase — `cor(jumbo, all-purchase) = 0.96` at zip-year (2012+).
+
+Fix: dropped `* 1000` on both lines. Rebuilt panel:
+`data/constructed/hmda_zip_panels_20260426.rds`. Jumbo zip-year count drops 121,217 →
+42,719. A1 / A2 / B unaffected (don't depend on CLL filter).
+
+Reran `03_hmda_zip.R` → updated `tables/T2_panelC_jumbo.md` and snapshot §10. Updated
+both Panel C coefs are null and noisier (smaller sample, true jumbo segment is sparser).
+
+Charlotte's second flag (RSSDID↔CERT first-match): diagnostic on full SOD branch panel
+(167,921 (CERT,YEAR) pairs) — only 1 pair has multiple RSSDIDs (0.001%); same in reverse
+direction. First-match shortcut isn't actually selecting between competitors. No fix
+needed; could add an explicit assertion later.

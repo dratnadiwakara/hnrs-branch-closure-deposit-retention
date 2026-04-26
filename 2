@@ -1,0 +1,9 @@
+> suppressPackageStartupMessages({library(data.table)}); raw<-setDT(readRDS("C:/Users/dimut/OneDrive/data/closure_opening_data_simple.rds")); cat("rows:",nrow(raw),"\n"); raw<-raw[!is.na(RSSDID) & RSSDID!=0 & !is.na(CERT)]; chk<-raw[, .(n_rssd=uniqueN(RSSDID)), by=.(CERT,YEAR)]; cat("Total CERT-YEAR:", nrow(chk), "\n"); cat("With  RSSDIDs:", sum(chk$n_rssd>=2), "(", round(100*mean(chk$n_rssd>=2),3),"%)\n"); print(chk[, .N, by=n_rssd][order(n_rssd)])
+rows: 2211578 
+Total CERT-YEAR: 167921 
+With  RSSDIDs: 1 ( 0.001 %)
+   n_rssd      N
+    <int>  <int>
+1:      1 167920
+2:      2      1
+> 

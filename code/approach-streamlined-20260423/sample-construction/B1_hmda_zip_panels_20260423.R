@@ -168,7 +168,7 @@ q_jumbo_pre <- "
     ON LEFT(l.census_tract,5) = c.county AND l.year = c.year
   WHERE l.action_taken='1' AND l.loan_purpose='1'
     AND LENGTH(l.census_tract)=11 AND l.year BETWEEN 2012 AND 2017
-    AND CAST(l.loan_amount AS DOUBLE) * 1000 > c.cll_1unit
+    AND CAST(l.loan_amount AS DOUBLE) > c.cll_1unit
   GROUP BY rssdid, l.census_tract, l.year"
 q_jumbo_post <- "
   SELECT CAST(a.rssd_id AS BIGINT) AS rssdid,
@@ -180,7 +180,7 @@ q_jumbo_post <- "
     ON LEFT(l.census_tract,5) = c.county AND l.year = c.year
   WHERE l.action_taken='1' AND l.loan_purpose='1'
     AND LENGTH(l.census_tract)=11 AND l.year >= 2018
-    AND CAST(l.loan_amount AS DOUBLE) * 1000 > c.cll_1unit
+    AND CAST(l.loan_amount AS DOUBLE) > c.cll_1unit
   GROUP BY rssdid, l.census_tract, l.year"
 jumbo_tract <- rbind(dbGetQuery(con, q_jumbo_pre), dbGetQuery(con, q_jumbo_post))
 
