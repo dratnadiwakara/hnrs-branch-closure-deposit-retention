@@ -1,6 +1,64 @@
 
 
 Philip Strahan
+Tue, May 5, 1:33 PM (5 days ago)
+to me, Rajesh, Charlotte
+
+Not really sure.  We could construct the predicted zip-year level closure variables directly, with "the fraction of banks in zip with apps x mobile usage locally" as the key driver ("instrument"), plus the other controls in our current framework.  This would obviate the need to aggregate, and also we would not need to worry about bank-year effects.
+
+Linear model is easier... I would always suggest at least starting with that.
+
+Does that make sense?
+
+Philip E. Strahan
+Collins Professor of Finance
+Seidner Department of Finance
+Boston College, Carroll School of Management
+
+---
+Dimuthu Ratnadiwakara <dimuthu.ratnadiwakara@gmail.com>
+Tue, May 5, 11:33 AM (5 days ago)
+to Philip, Rajesh, Charlotte
+
+Few follow up questions:
+Should the 'first stage' be a logistic regression? but, if we want bank-year FE,  logistic  becomes hard to fit?
+Do we keep bank-year fixed effects? 
+When aggregating fitted bank-zip closure probabilities up to the zip-year, should we use deposit-weighted or branch-count weighted?
+
+---
+Philip Strahan
+8:53 AM (1 hour ago)
+to Rajesh, me, Charlotte
+
+Here is an elaboration of Rajesh's idea:
+
+Use (app adoption x local mobile phone) (+controls) to get the predicted probability of branch closure at the bank-locality level.  Aggregate this up across banks in a given locality to get the total predicted level of branch closures.  The difference between this market-level prediction and the actual closure rate would capture closures unrelated to technology.  We now have two variables representing branch closure.  The one driven by tech (the predicted value) should have low (or no) deposit spillover to other branches; the other component should have high spillovers.  It is basically a way to test our theory from cross-section; right now, all we can do is look at how spillovers vary over time.
+
+
+Philip E. Strahan
+---
+
+Rajesh P Narayanan
+Attachments
+Mon, May 4, 12:33 PM (21 hours ago)
+to me, Philip, Charlotte
+
+Sorry! I missed seeing the last round of results.
+
+Few observations/thoughts:
+
+Time period: There seems to be something different about the 2020-2022 Covid period where the results change from 2012-2019. I think we should drop it, given that a lot of the deposit flows in that period were driven by stimulus.
+Top 4: We have WFC in our top 4. Wells was subject to the penalty/asset cap restriction in 2018 which caused it to shrink its balance sheet (reduce deposits and close branches (see attached paper by Ruan-Vij, forthcoming RFS).  We should probably drop these post 2017 closures, because, as the paper shows, the depositors moved to nearby branches for other reasons. 
+Branch openings: What if there are openings in t-1 (which affects our RHS closed bank share variable or in the year after (which affects our LHS incumbent share variable)? Probably not an issue in t-1, as we normalize by total deposits at t-1, but maybe in year t because we normalize the LHS also by deposits at t-1. May be a problem with large banks as they were the ones opening branches. 
+Identification:  
+
+Nguyen merger instrument: The first stage results show that the instrument is strong (based on F-stats) only in 2008-11 and 2023-2024, but weak during the 2012-2019 period when digital transformation is taking place. The Nguyen merger instrument is fundamentally bank-level variation mapped to ZIP codes.  There may not be enough bank level variation in that period to drive variation (we have 114 mergers overall).  So, why not introduce the variation in mobile adoption we have as an interaction in the instrument — Expose_event x Mobile adoption (at say t-2).
+Alternatively, we could also do App launch (=1 if bank had launched app prior to t) X Mobile adoption at t-2.  Here we are predicting closures by digitally-capable banks (which introduced an app) in markets with high mobile adoption — the bank knows its depositors can migrate digitally.  But high mobile adoption markets may also be wealthier, younger, or more urban, which may independently affect deposit growth (violating the exclusion restriction). Hence a 2 or 3 year lagged mobile adoption rate
+Or leave out bank level variation, and go with market level variation Bartik style:  Zip z’s mobile adoption rate in base year t0 (share) X National change in mobile adoption in year t excluding zip z’s contribution (shift).  That is, predict mobile adoption by a ZIP's pre-determined exposure to national technology trends and ask if it predicts the share of deposits at closed branches in that ZIP.   Higher predicted mobile adoption in a ZIP should attract more branch closures by digitally-capable banks because these banks know their depositors can migrate digitally, making it rational to close branches in high-mobile ZIPs rather than low-mobile ZIPs. Essentially, we are predicting more physical branch closures in high-mobile-adoption ZIPs, for technology infrastructure reasons rather than local deposit market weakness.
+
+---
+
+Philip Strahan
 Wed, Apr 22, 8:17 AM (1 day ago)
 to me, Rajesh, chaendler
 

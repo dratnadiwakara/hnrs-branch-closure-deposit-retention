@@ -36,11 +36,15 @@ Do **not** check:
 
 ---
 
+## Inputs
+
+- **`$ARGUMENTS`**: `<track-name>` (required) — the track folder name under `tracks/`, e.g. `did-april2026`. The skill resolves the default paper file to `tracks/<track-name>/latex/main.tex` and looks for tables/figures under `tracks/<track-name>/latex/tables/` and `tracks/<track-name>/latex/figures/`. The user may instead pass an explicit paper `.tex` path (and optionally a separate tables `.tex` path) to override the default.
+
 ## Workflow
 
 ### Step 1 — Ingest files
 
-Read all provided `.tex` files using `view` or `bash_tool`. **If no file is specified, default to `latex/main.tex`.** If a separate tables file is provided, read it in addition to the paper body. Resolve `\input{}` and `\include{}` references if possible.
+Read all provided `.tex` files using `view` or `bash_tool`. **If no file is specified, default to `tracks/<track>/latex/main.tex`.** If a separate tables file is provided, read it in addition to the paper body. Resolve `\input{}` and `\include{}` references if possible.
 
 Build two internal structures:
 - **Claims list**: every in-text quantitative claim with its surrounding sentence, the table/figure
@@ -104,9 +108,9 @@ it is consistent, but do not auto-fail.
 
 Produce a Markdown report in the structure below and save it to:
 
-`.claude/cc/figure-table-crosscheck/consistency_audit_report_YYYY-MM-DD.md`
+`.claude/cc/figure-table-crosscheck/consistency_audit_report_<track>_YYYY-MM-DD.md`
 
-using today's date in `YYYY-MM-DD` format. Ensure that the
+using today's date in `YYYY-MM-DD` format and the track name passed via `$ARGUMENTS`. Ensure that the
 `.claude/cc/figure-table-crosscheck/` directory exists, creating it if necessary.
 
 ---

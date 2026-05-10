@@ -88,7 +88,8 @@ Before inserting any text, internalize these norms:
 
 ## Required inputs
 
-- **Path to the .tex file** — the manuscript to edit. Default: `latex/main.tex`. If no file is specified, use `latex/main.tex` (e.g. a section file such as `latex/sections/results/results_current.tex` may be specified instead).
+- **`$ARGUMENTS`**: `<track-name>` (required, first token) — the track folder name under `tracks/`, e.g. `did-april2026`. The skill resolves the default file to `tracks/<track-name>/latex/main.tex`.
+- **Path to the .tex file** — the manuscript to edit. Default: `tracks/<track>/latex/main.tex`. The user may supply an explicit path to a section file under `tracks/<track>/latex/sections/<sec>/<sec>_current.tex` instead.
 - **Line number** — the line in that file where the new sentence or paragraph should be inserted (new content is placed at this line; existing content at this line moves down).
 - **The point to communicate** — what the insertion should say (one sentence, a few sentences, or a full paragraph).
 

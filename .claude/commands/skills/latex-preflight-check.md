@@ -12,16 +12,16 @@ You **do not** edit the manuscript or run analysis. You only read, compare, and 
 ## 1. Scope and Inputs
 
 ### 1.1 Inputs (user-provided)
-- Path to the **main LaTeX document** to review. Default: `latex/main.tex`. If no file is specified, use `latex/main.tex`.
+- **`$ARGUMENTS`**: `<track-name>` (required) — the track folder name under `tracks/`, e.g. `did-april2026`. Default main LaTeX document: `tracks/<track-name>/latex/main.tex`. The user may pass an explicit `.tex` path to override the default.
 
 ### 1.2 Related project files (you should read as needed)
 - Any LaTeX files that the main file includes/inputs (`\input{}`, `\include{}`).
-- The relevant BibTeX / biblatex resources (`.bib`) used for references.
+- The relevant BibTeX / biblatex resources (`.bib`) used for references (typically `tracks/<track>/latex/main.bib`).
 - Figures and tables referenced by the manuscript, such as:
-  - PDFs/PNGs in `latex/figures/` or adjacent directories.
-  - `.tex` tables in `latex/tables/` or similar.
+  - PDFs/PNGs in `tracks/<track>/latex/figures/` or adjacent directories.
+  - `.tex` tables in `tracks/<track>/latex/tables/` or similar.
   - Other exhibit assets in the same directory tree as the main LaTeX file.
-- Read-only inspection of scripts (e.g. under `code/` and `code/result-generation/`) to understand how exhibits are produced.
+- Read-only inspection of scripts under `tracks/<track>/code/result-generation/` and `tracks/<track>/code/sample-construction/`, plus shared `code/common.R` at the project root, to understand how exhibits are produced.
 
 ### 1.3 What you are checking (preflight focus)
 You are checking whether the manuscript is **submission-ready from a presentation and consistency standpoint**, focusing strictly on:
@@ -47,13 +47,13 @@ You operate in **read-only mode** for the repository:
 - **Do not create, modify, or delete** any files **except** the single report file specified in Section 4.
 
 You may read from:
-- `latex/` (figures/tables/results artifacts),
-- `code/` (to understand what outputs should be),
-- `data/` only if needed to interpret labels/variable names (no execution).
+- `tracks/<track>/latex/` (figures/tables/results artifacts),
+- `tracks/<track>/code/` and the project-root shared `code/` (to understand what outputs should be),
+- `data/` (project-root) and `tracks/<track>/data/` only if needed to interpret labels/variable names (no execution).
 
 ### 2.2 The only allowed write
 - You may create **exactly one** output file: the markdown report at
-  `.claude/cc/latex-preflight/YYYY-MM-DD_filename.md`
+  `.claude/cc/latex-preflight/YYYY-MM-DD_<track>_<filename>.md`
 - You may create the `.claude/cc/latex-preflight/` directory if it does not exist.
 - Do not write anywhere else.
 
@@ -117,9 +117,9 @@ Add the following lightweight checks when scanning prose:
 For each identifiable figure/table:
 - Read the **caption** and key in-text description.
 - Locate the corresponding output if possible (priority order):
-  1) Exhibit file under `latex/figures/`, `latex/tables/` or similar
+  1) Exhibit file under `tracks/<track>/latex/figures/`, `tracks/<track>/latex/tables/` or similar
   2) Table `.tex` / `.csv` / `.txt` output used by LaTeX
-  3) Generating code under `code/` (read-only)
+  3) Generating code under `tracks/<track>/code/` (read-only)
 
 Check whether caption and text accurately describe:
 - Sample (unit, time window, restrictions),
@@ -133,7 +133,7 @@ Flag:
 - Any mismatch between what is shown and what is claimed.
 
 ### 3.5 Consistency with code and outputs (deterministic)
-Read relevant scripts (especially `code/result-generation/`) to infer:
+Read relevant scripts (especially `tracks/<track>/code/result-generation/`) to infer:
 - Which variables are used,
 - Time/sample filters,
 - Output filenames and labeling.
@@ -148,8 +148,8 @@ Do not critique the underlying design; only whether the **description matches** 
 ## 4. Output: Preflight Report (Required)
 
 Write a markdown report to:
-- `.claude/cc/latex-preflight/YYYY-MM-DD_filename.md`
-- Use a short descriptive filename based on the LaTeX file (e.g., `main` → `main_preflight`).
+- `.claude/cc/latex-preflight/YYYY-MM-DD_<track>_<filename>.md`
+- Use a short descriptive filename based on the LaTeX file (e.g., `main` → `main_preflight`) and prefix with the track name.
 
 ### 4.1 Report format (must follow)
 Include:

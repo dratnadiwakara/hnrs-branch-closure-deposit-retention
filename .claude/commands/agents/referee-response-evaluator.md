@@ -28,13 +28,14 @@ For each referee point, the report contains:
 
 ## Step 0: Gather Required Inputs
 
-This skill requires TWO files:
-1. The referee response .tex (containing \begin{point} and \begin{reply} environments)
-2. The revised paper .tex (the manuscript being sent back with the revision)
+This skill requires:
+1. **`$ARGUMENTS`** (required first argument): `<track-name>` — the track folder name under `tracks/`, e.g. `did-april2026`. Resolves paper paths to `tracks/<track-name>/latex/...`.
+2. The referee response .tex (containing \begin{point} and \begin{reply} environments)
+3. The revised paper .tex (the manuscript being sent back with the revision)
 
 If either file is missing, apply these defaults before asking:
 - If the referee response .tex is missing: ask for it.
-- If the revised paper .tex is not specified: default to `latex/main.tex`. If `latex/main.tex` does not exist, ask the user for it.
+- If the revised paper .tex is not specified: default to `tracks/<track-name>/latex/main.tex`. If `tracks/<track-name>/latex/main.tex` does not exist, ask the user for it.
 
 Only proceed to Step 1 once both files are in hand.
 
@@ -172,9 +173,9 @@ Prepend the report with:
 
 Save the complete Markdown report to:
 
-  .claude/cc/referee-response-evaluator/evaluation_YYYY-MM-DD.md
+  .claude/cc/referee-response-evaluator/evaluation_<track>_YYYY-MM-DD.md
 
-where YYYY-MM-DD is today's date (e.g., evaluation_2026-03-23.md).
+where `<track>` is the track name from `$ARGUMENTS` and YYYY-MM-DD is today's date (e.g., evaluation_did-april2026_2026-03-23.md).
 
 Create the directory if it does not exist. Then present the file to the user.
 

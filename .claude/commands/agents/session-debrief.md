@@ -13,9 +13,9 @@ Caveman style. Short. No fluff. Technical substance stays.
 
 ## Step 1 — Identify active folder
 
-Look at files modified this session (use git diff --name-only HEAD, recent Bash tool calls visible in conversation, or files mentioned by user). Find the subfolder where most work happened (e.g. `code/approach-descriptives/`, `v1/`, `latex/`). That is the target folder.
+Look at files modified this session (use git diff --name-only HEAD, recent Bash tool calls visible in conversation, or files mentioned by user). Find the folder where most work happened. Prefer per-track granularity: if most work was inside a single track (e.g. `tracks/did-april2026/code/`, `tracks/did-april2026/latex/`), the target folder is the track root `tracks/<track>/` and the note goes to `tracks/<track>/NOTES.md`.
 
-If work spread across multiple folders with no clear winner, use the project root.
+If work spread across multiple tracks or was at the project root with no clear winner, use the project root and write to `NOTES.md` at the project root.
 
 ## Step 2 — Read existing note (if any)
 

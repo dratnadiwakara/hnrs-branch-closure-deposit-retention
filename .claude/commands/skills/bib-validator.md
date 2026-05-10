@@ -21,7 +21,9 @@ Validate every entry in a `.bib` file against Google Scholar and produce a clean
 
 ### Step 1 — Parse the .bib file
 
-Read the `.bib` file (uploaded by user or at a path they specified). Parse it into individual entries. Each entry starts with `@TYPE{CITEKEY,` and ends with a matching closing `}`.
+**`$ARGUMENTS`**: `<track-name>` (required) — the track folder name under `tracks/`, e.g. `did-april2026`. Default `.bib` path: `tracks/<track-name>/latex/main.bib`. The user may pass an explicit `.bib` path to override.
+
+Read the `.bib` file (default `tracks/<track>/latex/main.bib`, or the path the user specified). Parse it into individual entries. Each entry starts with `@TYPE{CITEKEY,` and ends with a matching closing `}`.
 
 Use Python with the `bibtexparser` library (install if needed, using global pip: `pip install bibtexparser` or `pip install bibtexparser --break-system-packages`). Extract for each entry:
 - Citation key
@@ -131,7 +133,7 @@ Repeat for every entry. Keep the code blocks as proper ` ```bibtex ` fenced bloc
 
 ### Step 5 — Save and present
 
-Save the report as `.claude/cc/bib-validator/bib_validation_report_YYYY-MM-DD.md`,
+Save the report as `.claude/cc/bib-validator/bib_validation_report_<track>_YYYY-MM-DD.md`,
 using today's date in `YYYY-MM-DD` format. Ensure that the
 `.claude/cc/bib-validator/` directory exists, creating it if necessary. Use
 `present_files` to share it with the user. Do not write to or modify the original

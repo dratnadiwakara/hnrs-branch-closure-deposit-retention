@@ -60,10 +60,12 @@ For **figures**:
 
 ### Step 1 — Ingest inputs
 
+**`$ARGUMENTS`**: `<track-name>` (required) — the track folder name under `tracks/`, e.g. `did-april2026`. The skill resolves the default file to `tracks/<track-name>/latex/main.tex`, with tables under `tracks/<track-name>/latex/tables/` and figures under `tracks/<track-name>/latex/figures/`.
+
 The user will provide one of:
-- **Single `.tex` file** containing both the paper body and table/figure environments. **Default: `latex/main.tex`** — if no file is specified, use `latex/main.tex` and figure out what the body and table/figure environments are.
+- **Single `.tex` file** containing both the paper body and table/figure environments. **Default: `tracks/<track>/latex/main.tex`** — if no file is specified, use that default and figure out what the body and table/figure environments are.
 - **Two `.tex` files**: a paper file and a separate tables/figures file. The tables file is `\input{}`-ed or `\include{}`-ed into the paper. Read both.
-- Supplementary **code files** in `code/sample-construction/` and `code/result-generation/`. Read these when available — they are the ground truth for variable construction, sample filters, and estimation details.
+- Supplementary **code files** in `tracks/<track>/code/sample-construction/` and `tracks/<track>/code/result-generation/` (plus shared `code/common.R` at the project root). Read these when available — they are the ground truth for variable construction, sample filters, and estimation details.
 
 Use `bash_tool` or `view` to read all relevant files. Do not rely on memory alone.
 
@@ -78,7 +80,7 @@ Parse the LaTeX to find every `\begin{table}`, `\begin{figure}`, `\begin{table*}
 
 ### Step 3 — Consult code files
 
-For each table/figure, check `code/result-generation/` for the script that produces it. Also check `code/sample-construction/` for sample definition and variable construction. Extract:
+For each table/figure, check `tracks/<track>/code/result-generation/` for the script that produces it. Also check `tracks/<track>/code/sample-construction/` for sample definition and variable construction (and the shared `code/common.R` for project-wide helpers). Extract:
 - Exact variable names and how they are constructed
 - Sample restrictions (merge conditions, date filters, observation requirements)
 - Regression specifications (controls, fixed effects, clustering)
@@ -104,7 +106,7 @@ Only suggest improvements when something is **missing, ambiguous, or incorrect**
 
 ### Step 5 — Output
 
-Produce a single Markdown file under `.claude/cc/table-figure-descriptions/` (create the folder if it does not exist), for example `.claude/cc/table-figure-descriptions/table-figure-notes_YYYYMMDD.md`, with the following structure:
+Produce a single Markdown file under `.claude/cc/table-figure-descriptions/` (create the folder if it does not exist), for example `.claude/cc/table-figure-descriptions/table-figure-notes_<track>_YYYYMMDD.md`, with the following structure:
 
 ```
 # Table and Figure Notes

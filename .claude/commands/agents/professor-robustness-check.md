@@ -25,7 +25,8 @@ A single target result, such as:
 You must stick to **one target** and design the robustness exercise around it.
 
 ### 1.2 Inputs (user-provided)
-- Path to the **main LaTeX file** or a LaTeX snippet containing the result. Default: `latex/main.tex`. If no file is specified, use `latex/main.tex`.
+- **`$ARGUMENTS`** (required first argument): `<track-name>` — the track folder name under `tracks/`, e.g. `did-april2026`. The agent reads from `tracks/<track-name>/latex/...` and (for codebook-only consultation) `tracks/<track-name>/code/...`. Project root paths `data/raw/`, `data/constructed/`, and `code/common.R` are unchanged.
+- Path to the **main LaTeX file** or a LaTeX snippet containing the result. Default: `tracks/<track>/latex/main.tex`. If no file is specified, use `tracks/<track>/latex/main.tex`.
 - A short description of the **specific result to check**, e.g. "Column (3) of Table 4: effect of branch closures on small business lending".
 
 ---
@@ -55,18 +56,18 @@ Goal: replicate independently from the paper's description. You must not treat t
   - matching procedures,
   - regression formulas, FE structures, clustering choices, or weighting formulas.
 
-**Allowed: documentation-only reading of `code/sample-construction/`**
-It is acceptable to open and read `code/sample-construction/` **only to understand what each dataset is**, in the sense of a codebook/data dictionary. This includes:
+**Allowed: documentation-only reading of `tracks/<track>/code/sample-construction/`**
+It is acceptable to open and read `tracks/<track>/code/sample-construction/` **only to understand what each dataset is**, in the sense of a codebook/data dictionary. This includes:
 - What dataset each script produces (name, unit of observation),
 - Which **raw** files feed into which constructed dataset (input file inventory),
 - Key identifiers/merge keys and time variables,
 - Variable naming conventions, label maps, and dictionaries,
 - High-level narrative comments about dataset purpose.
 
-You must **not** use author code to replicate the paper "by following their steps." Any use of `code/sample-construction/` must be limited to clarifying dataset identity and variable meaning.
+You must **not** use author code to replicate the paper "by following their steps." Any use of `tracks/<track>/code/sample-construction/` must be limited to clarifying dataset identity and variable meaning.
 
 **Required transparency:**  
-If you consult `code/sample-construction/` for dataset understanding, you must include a short section in the report:
+If you consult `tracks/<track>/code/sample-construction/` for dataset understanding, you must include a short section in the report:
 - **"Codebook notes (from sample-construction)"** listing which files you read and what context they provided (mapping/inventory only).
 
 ### 2.3 Your workspace and allowed outputs
@@ -141,7 +142,7 @@ Treat the LaTeX document as a public paper that should contain enough detail to 
 If ambiguous:
 - choose the most conservative plausible mapping,
 - record each ambiguity in the Assumption Register.
-- if `code/sample-construction/` was consulted for dataset identity, record it under **Codebook notes** (mapping context only).
+- if `tracks/<track>/code/sample-construction/` was consulted for dataset identity, record it under **Codebook notes** (mapping context only).
 
 ### Step 3 — Build a minimal analytical sample
 In your R script(s) under `.claude/cc/professor-robustness-check/`:
@@ -199,7 +200,7 @@ Avoid accusations or claims of intent; keep judgments conditional on evidence.
 At top of every script, include comments specifying:
 - target result (table/column/figure),
 - raw files read,
-- whether `code/sample-construction/` was consulted for dataset identity (yes/no; list files if yes),
+- whether `tracks/<track>/code/sample-construction/` was consulted for dataset identity (yes/no; list files if yes),
 - key assumptions (brief),
 - how to run,
 - packages used.
@@ -230,9 +231,9 @@ Scripts must:
 
 Write a markdown report to:
 
-* `.claude/cc/professor-robustness-check/YYYY-MM-DD_result-label.md`
+* `.claude/cc/professor-robustness-check/YYYY-MM-DD_<track>_result-label.md`
 
-Where `result-label` is short and descriptive (e.g. `table4_col3_branch_closures`).
+Where `<track>` is the track name passed via `$ARGUMENTS` and `result-label` is short and descriptive (e.g. `table4_col3_branch_closures`).
 
 ### 6.1 Required report structure
 
@@ -248,7 +249,7 @@ Where `result-label` is short and descriptive (e.g. `table4_col3_branch_closures
 
 3. **Codebook notes (from sample-construction) — include only if used**
 
-* Which `code/sample-construction/` files were read.
+* Which `tracks/<track>/code/sample-construction/` files were read.
 * What they clarified (dataset purpose, unit, IDs, time vars, raw-file inputs).
 * Confirm you did not use them as a step-by-step recipe for filters/variable construction/spec.
 
@@ -342,11 +343,11 @@ This reconciliation step is **after** the main robustness assessment and must **
 In this post-replication phase, you should think of yourself as a **professor delegating forensic reconciliation to a research assistant (RA)**:
 
 - The RA has **full read-only access** to the author's code and data files, including:
-  - All scripts under `code/` (sample-construction, result-generation, utilities),
+  - All scripts under `tracks/<track>/code/` (sample-construction, result-generation, utilities) and shared `code/common.R` at project root,
   - All datasets under `data/` (both `data/raw/` and any processed/cleaned files),
-  - Tables/figures under `latex/tables/` and `latex/figures/`.
+  - Tables/figures under `tracks/<track>/latex/tables/` and `tracks/<track>/latex/figures/`.
 - The RA must **never modify or execute** author scripts or notebooks:
-  - No running `code/sample-construction/*.R`, `code/result-generation/*.qmd`, or Makefiles.
+  - No running `tracks/<track>/code/sample-construction/*.R`, `tracks/<track>/code/result-generation/*.qmd`, or Makefiles.
   - No editing author-owned files.
 - The RA must instead **create and run their own reconciliation scripts** under `.claude/cc/professor-robustness-check/`, which may:
   - Read both raw and processed datasets produced by the author pipeline,

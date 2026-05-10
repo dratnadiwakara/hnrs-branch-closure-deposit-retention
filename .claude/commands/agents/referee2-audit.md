@@ -18,11 +18,15 @@ Example (PowerShell): `New-Item -ItemType Directory -Force -Path ".claude/cc/ref
 
 Example (Unix): `mkdir -p .claude/cc/referee2-audit/replication .claude/cc/referee2-audit`
 
+## Inputs
+
+- **`$ARGUMENTS`** (required first argument): `<track-name>` — the track folder name under `tracks/`, e.g. `did-april2026`. The agent reads code from `tracks/<track-name>/code/...` and paper output references from `tracks/<track-name>/latex/...`. Project root paths `data/raw/`, `data/constructed/`, and `code/common.R` are unchanged. Additional arguments (e.g. the specific script to audit, the replication language) follow.
+
 ## Data and Replication Environment
 
-- The **user will always specify the main script to audit/replicate** (e.g. `code/result-generation/main_table_20260312.qmd` or `code/sample-construction/01_branch_closure_panel.R`). Treat this as the authoritative entry point for identifying code and expected outputs.
-- You may freely **read and inspect scripts in** `code/sample-construction/` to understand how raw data in `data/raw/` is transformed into analytical samples, but you must still not run or modify these scripts.
-- When constructing and running replication scripts, you may **only read input data from** `data/raw/`. Do **not** read data from any other folder (e.g. `data/constructed/`, `latex/`, `temp/`, or external absolute paths).
+- The **user will always specify the main script to audit/replicate** (e.g. `tracks/<track>/code/result-generation/main_table_20260312.qmd` or `tracks/<track>/code/sample-construction/01_branch_closure_panel.R`). Treat this as the authoritative entry point for identifying code and expected outputs.
+- You may freely **read and inspect scripts in** `tracks/<track>/code/sample-construction/` (and shared `code/common.R` at project root) to understand how raw data in `data/raw/` is transformed into analytical samples, but you must still not run or modify these scripts.
+- When constructing and running replication scripts, you may **only read input data from** `data/raw/`. Do **not** read data from any other folder (e.g. `data/constructed/`, `tracks/<track>/latex/`, `temp/`, or external absolute paths).
 - Your replication scripts may **temporarily write intermediate or transformed data files only to** `.claude/cc/referee2-audit/replication/`. Do not write data files anywhere else.
 - At the end of each replication run, **delete any temporary data files you created in** `.claude/cc/referee2-audit/replication/` so that directory contains only your replication scripts and non-data artifacts (e.g. logs, markdown notes). Do not delete or modify any user-authored files.
 
@@ -32,11 +36,11 @@ Example (Unix): `mkdir -p .claude/cc/referee2-audit/replication .claude/cc/refer
 
 **Audit scope:** The user may specify a single `.md` file to audit (e.g. `docs/results/summary_20260304.md`) or leave scope open. If the user specifies a file, audit only that file and the results/scripts linked from it. If the user does not specify a file, audit all `.md` files in `docs/results/` or ask the user which file(s) to audit.
 
-**Code location:** Scripts that generate these results live in `code/` (e.g. `code/sample-construction/`, `code/result-generation/`).
+**Code location:** Scripts that generate these results live in `tracks/<track>/code/` (e.g. `tracks/<track>/code/sample-construction/`, `tracks/<track>/code/result-generation/`). Shared `code/common.R` at project root may also be sourced.
 
 **Script identification:**
-- Markdown files in `docs/results/` should include the name or path of the script that generates each result (e.g. in a comment, caption, or metadata block). Example: `<!-- script: code/result-generation/main_table_20260304.qmd -->` or `*Source: code/result-generation/main_table_20260304.qmd*`.
-- For each result, identify the corresponding script in `code/` and audit that script.
+- Markdown files in `docs/results/` should include the name or path of the script that generates each result (e.g. in a comment, caption, or metadata block). Example: `<!-- script: tracks/<track>/code/result-generation/main_table_20260304.qmd -->` or `*Source: tracks/<track>/code/result-generation/main_table_20260304.qmd*`.
+- For each result, identify the corresponding script in `tracks/<track>/code/` and audit that script.
 - **If you cannot identify the script** for a result: stop and ask the user to point to the correct script path. Do not guess or skip the result.
 
 ## Critical Rule: You NEVER Modify Author Code
@@ -61,8 +65,8 @@ Perform five distinct audits. See the Reference Materials section at the bottom 
 
 ## Outputs
 
-1. **Referee report** — `.claude/cc/referee2-audit/YYYY-MM-DD_round[N]_report.md`
-2. **Markdown summary** — `.claude/cc/referee2-audit/YYYY-MM-DD_round[N]_summary.md`
+1. **Referee report** — `.claude/cc/referee2-audit/YYYY-MM-DD_<track>_round[N]_report.md`
+2. **Markdown summary** — `.claude/cc/referee2-audit/YYYY-MM-DD_<track>_round[N]_summary.md`
 
 See the Reference Materials section below for the report structure and markdown summary format.
 
@@ -229,9 +233,9 @@ Derived from [dratnadiwakara/MixtapeTools — personas/referee2.md](https://gith
 
 #### Filing Locations
 
-- **Report (Markdown):** `.claude/cc/referee2-audit/YYYY-MM-DD_round[N]_report.md`
-- **Summary (Markdown):** `.claude/cc/referee2-audit/YYYY-MM-DD_round[N]_summary.md`
-- **Author response:** `.claude/cc/referee2-audit/YYYY-MM-DD_round[N]_response.md`
+- **Report (Markdown):** `.claude/cc/referee2-audit/YYYY-MM-DD_<track>_round[N]_report.md`
+- **Summary (Markdown):** `.claude/cc/referee2-audit/YYYY-MM-DD_<track>_round[N]_summary.md`
+- **Author response:** `.claude/cc/referee2-audit/YYYY-MM-DD_<track>_round[N]_response.md`
 
 ---
 

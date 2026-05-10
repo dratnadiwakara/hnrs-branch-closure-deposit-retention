@@ -13,9 +13,15 @@ Papers evolve. By the time a paper is final, the codebase typically carries resi
 
 ---
 
+## Inputs
+
+- **`$ARGUMENTS`**: `<track-name>` (required) — the track folder name under `tracks/`, e.g. `did-april2026`. The audit is scoped to that track: it reads `tracks/<track-name>/code/` (all subfolders) and `tracks/<track-name>/latex/...`. The shared `code/common.R` at the project root is also read (it is shared across tracks).
+
+---
+
 ## Step 1 — Read the paper
 
-Identify the main manuscript: the user may specify a path (e.g. `latex/paper_Jan2026.tex`); otherwise default to `latex/main.tex`. Read that file and any files pulled in via `\input{}` or `\include{}`.
+Identify the main manuscript: the user may specify a path (e.g. `tracks/<track>/latex/paper_Jan2026.tex`); otherwise default to `tracks/<track>/latex/main.tex`. Read that file and any files pulled in via `\input{}` or `\include{}`.
 
 Extract and record:
 
@@ -32,7 +38,7 @@ This is your **results inventory**. Everything else in the code either serves th
 
 ## Step 2 — Survey and read the codebase
 
-Scan the full directory tree. Read every file in `code/` including subdirectories. Read shared code (`code/common.R` or equivalent) first, then `code/sample-construction/`, then `code/result-generation/`. Note file types, naming conventions, apparent execution order, and any `source()` / `%run` / `do` / `import` chains.
+Scan the track's directory tree. Read every file under `tracks/<track>/code/` including subdirectories. Read shared code at the project root (`code/common.R` or equivalent — shared across all tracks) first, then `tracks/<track>/code/sample-construction/`, then `tracks/<track>/code/result-generation/`, then `tracks/<track>/code/archives/`. Note file types, naming conventions, apparent execution order, and any `source()` / `%run` / `do` / `import` chains.
 
 Read **every file completely**. While reading, build a running inventory:
 
@@ -71,11 +77,11 @@ Flag anything in the codebase not reachable from this map.
 
 Flag code that has no path to any reported result:
 
-- **Scripts** in `code/sample-construction/` or `code/result-generation/` that are not part of any result's dependency chain and are not in an `archives/` or `approach-*/` folder
-- **Functions** defined in shared code that are never called by any in-scope script
+- **Scripts** in `tracks/<track>/code/sample-construction/` or `tracks/<track>/code/result-generation/` that are not part of any result's dependency chain and are not in `tracks/<track>/code/archives/`
+- **Functions** defined in shared code (`code/common.R` or the track's own helpers) that are never called by any in-scope script
 - **Variables** constructed (assigned, mutated, joined) in a script but never used downstream — not passed to a regression, not included in a merge key, not written to any output
 - **Intermediate datasets** written to disk but never read by any subsequent script in the dependency chain
-- **Approach subfolders** (`code/approach-*/`) that contain scripts producing results not in the paper — note their presence and flag that they should be moved to `code/archives/` if the approach was abandoned
+- **Stray scripts** under `tracks/<track>/code/` that produce results not in the paper — flag them; if they represent abandoned exploration, recommend moving to `tracks/<track>/code/archives/`
 
 ### 3.3 — Unnecessary filters and sample restrictions
 
@@ -106,9 +112,9 @@ After the audit, write a brief description of what the **minimal correct pipelin
 
 Create the folder `.claude/cc/pipeline-audit/` if it does not exist. Save the report as:
 
-`.claude/cc/pipeline-audit/pipeline_audit_YYYYMMDD.md`
+`.claude/cc/pipeline-audit/pipeline_audit_<track>_YYYYMMDD.md`
 
-Use the current date in YYYYMMDD format.
+Use the current date in YYYYMMDD format and the track name passed via `$ARGUMENTS`.
 
 Use the following structure:
 
@@ -127,7 +133,7 @@ Use the following structure:
 
 | Result | Script | Datasets Used | Key Variables | Sample |
 |--------|--------|---------------|---------------|--------|
-| Table 1 — [caption summary] | `code/result-generation/...` | ... | ... | ... |
+| Table 1 — [caption summary] | `tracks/<track>/code/result-generation/...` | ... | ... | ... |
 | Table 2 — ... | | | | |
 | Figure 1 — ... | | | | |
 | [Robustness claim in text] | | | | |
@@ -139,7 +145,7 @@ Use the following structure:
 For each result, the full pipeline from raw data to output:
 
 ### Table 1 — [Short Title]
-Raw data → `[sample script]` → `[intermediate dataset]` → `[result script]` → `latex/tables/[file]`
+Raw data → `[sample script]` → `[intermediate dataset]` → `[result script]` → `tracks/<track>/latex/tables/[file]`
 
 [Repeat for each result.]
 
@@ -157,10 +163,10 @@ Raw data → `[sample script]` → `[intermediate dataset]` → `[result script]
 [List variables constructed in scripts but never used downstream. Include file and approximate line.]
 
 ### 3.4 Orphaned Intermediate Datasets
-[List intermediate files written to `data/constructed/` that are never read by any downstream script.]
+[List intermediate files written to `data/constructed/` (project-root, shared) or `tracks/<track>/data/constructed/` (track-local) that are never read by any downstream script.]
 
-### 3.5 Unarchived Approach Folders
-[List `code/approach-*/` folders whose results do not appear in the paper and that have not been moved to `code/archives/`.]
+### 3.5 Unarchived Exploratory Scripts
+[List scripts under `tracks/<track>/code/` whose results do not appear in the paper and that have not been moved to `tracks/<track>/code/archives/`.]
 
 ---
 
@@ -168,7 +174,7 @@ Raw data → `[sample script]` → `[intermediate dataset]` → `[result script]
 
 | Filter | File / Line | Disclosed in Paper? | Hypothetical Effect on N | Assessment |
 |--------|-------------|---------------------|--------------------------|------------|
-| `filter(price > 5)` | `build_sample.R:42` | No | Unknown | Vestigial or undisclosed — cannot be justified retrospectively |
+| `filter(price > 5)` | `tracks/<track>/code/sample-construction/build_sample.R:42` | No | Unknown | Vestigial or undisclosed — cannot be justified retrospectively |
 | ... | | | | |
 
 ---
@@ -178,7 +184,7 @@ Raw data → `[sample script]` → `[intermediate dataset]` → `[result script]
 [For each finding, cite file and approximate line. Describe the current construction and what a simpler equivalent would look like.]
 
 ### [Finding title]
-**File:** `code/...`
+**File:** `tracks/<track>/code/...`
 **Current construction:** [describe]
 **Simpler equivalent:** [describe]
 **Why it matters:** [does it affect readability, replicability, or risk of error?]
@@ -209,7 +215,7 @@ If the paper were written from scratch with only the results it currently report
 
 Prioritized list of changes that would move the codebase toward the minimal pipeline:
 
-1. **[High priority]** [Action — e.g., "Archive `code/approach-iv/` — this approach does not appear in the paper"]
+1. **[High priority]** [Action — e.g., "Move `tracks/<track>/code/result-generation/foo_iv.R` to `tracks/<track>/code/archives/` — this script's outputs do not appear in the paper"]
 2. **[Medium priority]** [Action]
 3. **[Low priority]** [Action]
 

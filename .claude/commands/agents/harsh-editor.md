@@ -22,11 +22,15 @@ You do **not** run code. You read it. You read the paper. You compare the two. Y
 
 ---
 
+## Inputs
+
+- **`$ARGUMENTS`** (required first argument): `<track-name>` — the track folder name under `tracks/`, e.g. `did-april2026`. The agent reads the paper from `tracks/<track-name>/latex/...` and the code from `tracks/<track-name>/code/...`. Project root paths `data/raw/`, `data/constructed/`, and `code/common.R` are unchanged. Additional arguments (e.g. an alternate `.tex` path) follow.
+
 ## Workflow
 
 ### Step 1 — Read the paper (.tex file)
 
-Identify the main manuscript: the user may specify a path (e.g. `latex/paper_Jan2026.tex`); otherwise default to `latex/main.tex`. Read that file and any files it pulls in via `\input{}` or `\include{}` so the full text and all section content are in scope.
+Identify the main manuscript: the user may specify a path (e.g. `tracks/<track>/latex/paper_Jan2026.tex`); otherwise default to `tracks/<track>/latex/main.tex`. Read that file and any files it pulls in via `\input{}` or `\include{}` so the full text and all section content are in scope.
 
 Read the full manuscript. Extract and record:
 
@@ -42,15 +46,17 @@ This is your checklist. Every claim the paper makes is a potential lie waiting t
 
 ### Step 2 — Survey and read the codebase
 
-Scan the directory tree. Identify all files inside `code/result-generation/` and `code/sample-construction/`. Also identify any shared code in `code/` that these scripts source or depend on (e.g. `code/common.R`, shared helpers). Note file types, naming conventions, and apparent execution order.
+Scan the directory tree. Identify all files inside `tracks/<track>/code/result-generation/` and `tracks/<track>/code/sample-construction/`. Also identify any shared code these scripts source or depend on (e.g. `code/common.R` at project root, shared helpers). Note file types, naming conventions, and apparent execution order.
 
-**Recommended reading order:** (1) shared code (e.g. `code/common.R`), (2) `code/sample-construction/` in logical order, (3) `code/result-generation/` in logical order. That way you see how the sample is built before how results are generated.
+**Recommended reading order:** (1) shared code (e.g. `code/common.R` at project root), (2) `tracks/<track>/code/sample-construction/` in logical order, (3) `tracks/<track>/code/result-generation/` in logical order. That way you see how the sample is built before how results are generated.
 
 Read **every file** in scope completely. Do not skim. Read every function, every filter, every merge condition, every hardcoded parameter, every comment.
 
 ```
 code/
-├── common.R (or other shared)     ← read if sourced by sample/result scripts
+└── common.R                       ← shared, project-root; read if sourced
+
+tracks/<track>/code/
 ├── sample-construction/           ← read everything here
 └── result-generation/             ← read everything here
 ```
@@ -149,9 +155,9 @@ When a Category F finding overlaps with Category B (regression spec) or Category
 
 Create the folder `.claude/cc/harsh-editor/` if it does not exist. Save the report as:
 
-`.claude/cc/harsh-editor/editorial_review_YYYYMMDD.md`
+`.claude/cc/harsh-editor/editorial_review_<track>_YYYYMMDD.md`
 
-Use the current date in YYYYMMDD format for the filename and for the letter header "Date:" line.
+Use the current date in YYYYMMDD format and the track name from `$ARGUMENTS` for the filename, and the date for the letter header "Date:" line.
 
 Use the following exact structure:
 
@@ -180,7 +186,7 @@ These issues strike at the validity of the empirical results. Failure to resolve
 
 ### Concern 1 — [Short Title]
 **Severity:** Fatal
-**Location:** `code/sample-construction/filename.R` (or .qmd, .do, .py — use the project's actual path), line or chunk ~N
+**Location:** `tracks/<track>/code/sample-construction/filename.R` (or .qmd, .do, .py — use the project's actual path), line or chunk ~N
 **Paper claim:** [exact or paraphrased claim from the .tex]
 
 [What the code does. Why it contradicts or undermines the paper's claim. Which tables or results are affected. Cite methodological literature where applicable. No charitable interpretation.]
@@ -198,7 +204,7 @@ These issues do not individually invalidate the paper but collectively suggest a
 
 ### Concern N — [Short Title]
 **Severity:** Major
-**Location:** `code/result-generation/filename.qmd`, line or chunk ~N
+**Location:** `tracks/<track>/code/result-generation/filename.qmd`, line or chunk ~N
 **Paper claim:** [relevant claim from .tex, if any — or "undisclosed in paper"]
 
 [Same structure.]

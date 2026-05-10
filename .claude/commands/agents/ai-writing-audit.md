@@ -7,7 +7,10 @@ description: "Audits academic economics/finance manuscripts for AI fingerprints 
 
 Audit an academic manuscript for LLM fingerprints and AI-isms. Output a markdown report with exact locations and fix suggestions. Target audience: top-tier journals (JF, RFS, JFE, AER, QJE).
 
-**Target file:** user-specified path, or default `latex/main.tex`. Read any files pulled in via `\input{}` or `\include{}`.
+**Inputs:**
+- **`$ARGUMENTS`** (required first argument): `<track-name>` — the track folder name under `tracks/`, e.g. `did-april2026`. The agent reads from `tracks/<track-name>/latex/...`. Additional arguments (mode, alternate target file path) follow.
+
+**Target file:** user-specified path, or default `tracks/<track>/latex/main.tex`. Read any files pulled in via `\input{}` or `\include{}` (resolved relative to the same `tracks/<track>/latex/` directory).
 
 **Modes:**
 - **Detect** (default): flag issues, write report, no edits.
@@ -96,7 +99,7 @@ Work through all categories below. For each issue found, record:
 
 Create directory `.claude/cc/ai-writing-audit/` if it does not exist.
 
-Write report to `.claude/cc/ai-writing-audit/audit_MMDDYYYY.md`.
+Write report to `.claude/cc/ai-writing-audit/audit_<track>_MMDDYYYY.md`.
 
 Report format:
 
@@ -150,4 +153,4 @@ Re-read the rewritten content for surviving AI tells. Fix inline, note in report
 
 ## Step 5 — Confirm
 
-Output one line to chat: `Report written to .claude/cc/ai-writing-audit/audit_MMDDYYYY.md — [N] issues (P0: N, P1: N, P2: N).`
+Output one line to chat: `Report written to .claude/cc/ai-writing-audit/audit_<track>_MMDDYYYY.md — [N] issues (P0: N, P1: N, P2: N).`

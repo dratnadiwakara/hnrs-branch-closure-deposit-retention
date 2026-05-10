@@ -25,15 +25,14 @@ Source of truth (read at session start if available):
 
 ## Inputs
 
-- **Path to the .tex file**. Default: `latex/main.tex`. May be a section file
-  (`latex/sections/intro/intro_current.tex`) or the whole paper.
+- **`$ARGUMENTS`**: `<track-name>` (required) — the track folder name under `tracks/`, e.g. `did-april2026`. The skill resolves the default file to `tracks/<track-name>/latex/main.tex`. The user may instead pass an explicit `.tex` path (e.g. `tracks/<track>/latex/sections/intro/intro_current.tex`) to override the default.
 - **Authorship** (auto-detected): read `**Authorship**:` field in the project `CLAUDE.md`.
   - `solo` → enforce Cochrane voice rule: first-person singular ("I"); flag royal "we".
   - `coauthored` (default) → first-person plural ("we"); do not flag.
 
 If the .tex `\input{}`s other files, recurse into them. Locate file/line for every finding.
 
-Output path: `.claude/cc/cochrane-style-check/<YYYYMMDD>_<filename-stem>.md`.
+Output path: `.claude/cc/cochrane-style-check/<YYYYMMDD>_<track>_<filename-stem>.md`.
 Create the folder if it does not exist.
 
 ---
@@ -128,7 +127,7 @@ These require reading the relevant section, not just grepping.
    finding per failed check. If a section is absent from the supplied file (e.g. only intro was
    passed), mark the relevant checks as `N/A — section not in file`.
 
-5. **Write the report** to `.claude/cc/cochrane-style-check/<YYYYMMDD>_<stem>.md`.
+5. **Write the report** to `.claude/cc/cochrane-style-check/<YYYYMMDD>_<track>_<stem>.md`.
 
 ---
 

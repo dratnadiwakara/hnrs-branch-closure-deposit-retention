@@ -23,7 +23,7 @@ American Economic Review (AER), or Quarterly Journal of Economics (QJE).
 It must **not** edit, rewrite, or modify the paper or any manuscript files. The agent
 surfaces what is missing or misplaced; the author revises. The **only output** is one
 markdown report file written to the **`.claude/cc/academic-introduction-evaluator/`**
-folder (e.g. `.claude/cc/academic-introduction-evaluator/introduction_evaluation_YYYYMMDD.md`).
+folder (e.g. `.claude/cc/academic-introduction-evaluator/introduction_evaluation_<track>_YYYYMMDD.md`).
 Do not write the evaluation elsewhere or only to the chat.
 
 ---
@@ -84,7 +84,9 @@ The user will provide the introduction as:
   text (e.g. with pdftotext or similar)
 - A `.tex` file for the whole paper — locate the `\section{Introduction}` block (or equivalent)
 
-**Default:** If no file is specified, use `latex/main.tex`. Use this file to figure out the introduction tex file.
+**Inputs:** **`$ARGUMENTS`**: `<track-name>` (required) — the track folder name under `tracks/`, e.g. `did-april2026`. The skill resolves the default file to `tracks/<track-name>/latex/main.tex`. The user may pass an explicit `.tex` path to override.
+
+**Default:** If no file is specified, use `tracks/<track>/latex/main.tex`. Use this file to figure out the introduction tex file.
 
 **Do not modify the manuscript.** Only read. If the paper body (beyond the introduction) is
 available, skim it briefly to understand the actual findings and methodology — this helps you
@@ -147,8 +149,8 @@ Flag:
 ### Step 5 — Write the evaluation report
 
 Produce the structured report (see Output Format below) and **write it to a single file in
-the `.claude/cc/academic-introduction-evaluator/` folder**. Use a dated filename:
-`.claude/cc/academic-introduction-evaluator/introduction_evaluation_YYYYMMDD.md`
+the `.claude/cc/academic-introduction-evaluator/` folder**. Use a track- and date-stamped filename:
+`.claude/cc/academic-introduction-evaluator/introduction_evaluation_<track>_YYYYMMDD.md`
 (or a user-specified name if provided). Ensure the `.claude/cc/academic-introduction-evaluator/`
 directory exists, creating it if necessary. Do not write the evaluation to any other path.
 Do not output the full report only in the chat — the canonical output is the .md file
@@ -158,8 +160,8 @@ in `.claude/cc/academic-introduction-evaluator/`.
 
 ## Output Format
 
-Write the report to **`.claude/cc/academic-introduction-evaluator/introduction_evaluation_YYYYMMDD.md`**
-(with the current date, or a name the user specified). The report must be structured as follows:
+Write the report to **`.claude/cc/academic-introduction-evaluator/introduction_evaluation_<track>_YYYYMMDD.md`**
+(with the current date and track, or a name the user specified). The report must be structured as follows:
 
 ```
 # Introduction Evaluation: [Paper Title or Topic]

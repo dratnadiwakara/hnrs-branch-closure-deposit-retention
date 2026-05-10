@@ -3,27 +3,28 @@
 ## Trigger
 This skill is **only** activated when the user explicitly invokes it with the `/write-section` command. Do NOT apply this skill based on context or intent inference. If the user asks about writing, editing, or drafting paper sections without using `/write-section`, treat it as a normal request—do not load or follow this skill's rules.
 
-**Valid triggers**: `/write-section intro`, `/write-section results`, `/write-section data`, etc.
+**Valid triggers**: `/write-section did-april2026 intro`, `/write-section did-april2026 results`, `/write-section iv-april2026 data`, etc.
 **Not a trigger**: "help me write the intro", "draft the results section", "edit my paper".
 
 ## Purpose
-Write individual sections of an empirical finance paper in LaTeX, targeting journals in the JF / RFS / JFE / JBF / JMCB range. Output is a `.tex` file saved to the appropriate subsection folder. **Never overwrite an existing `.tex` file**—always save as a new file with an incremented version suffix or updated date stamp (e.g., `intro_section_20260406.tex`).
+Write individual sections of an empirical finance paper in LaTeX, targeting journals in the JF / RFS / JFE / JBF / JMCB range. Output is a `.tex` file saved to the appropriate track-scoped subsection folder. **Never overwrite an existing `.tex` file**—always save as a new file with an incremented version suffix or updated date stamp (e.g., `intro_section_20260406.tex`).
 
 ## Inputs Required
 Before writing any section, Claude Code should collect or confirm:
-1. **Section type**: one of `intro`, `inst_bg`, `data`, `desc_stats`, `identification`, `results`, `conclusion`, `appendix`.
+0. **`$ARGUMENTS`** (first token): `<track-name>` (required) — the track folder name under `tracks/`, e.g. `did-april2026`. The skill resolves all reads/writes under `tracks/<track-name>/latex/...`.
+1. **Section type** (second token of `$ARGUMENTS`): one of `intro`, `inst_bg`, `data`, `desc_stats`, `identification`, `results`, `conclusion`, `appendix`.
 2. **Empirical results files**: `.tex` table files, figure `.png` files, and their descriptions/captions.
 3. **Code files** (optional but helpful): R or Stata scripts that generated the results, so variable names, sample filters, and specification details can be described accurately.
 4. **Project CLAUDE.md or context file**: for paper-specific terminology, variable definitions, identification strategy, and sample details.
 5. **Prior section drafts** (if any): so that cross-references, narrative arc, and notation remain consistent.
 
 ## Output Rules
-- Save to: `latex/sections/[section_subfolder]/[section_name]_[YYYYMMDD]_v[N].tex`
-  - If a file with today's date exists, increment version: `v2`, `v3`, etc.
+- Save to: `tracks/<track>/latex/sections/[section_subfolder]/[section_name]_current.tex` for the working draft, or to a dated/versioned filename `tracks/<track>/latex/sections/[section_subfolder]/[section_name]_[YYYYMMDD]_v[N].tex` when the user wants to preserve a snapshot.
+  - If a dated file with today's date exists, increment version: `v2`, `v3`, etc.
   - Subfolder names: `intro`, `inst_bg`, `data`, `desc_stats`, `identification`, `results`, `conclusion`, `appendix`.
-- Pure LaTeX body content only—no `\documentclass`, no `\begin{document}`. The file will be `\input{}`-ed into a master document.
+- Pure LaTeX body content only—no `\documentclass`, no `\begin{document}`. The file will be `\input{}`-ed into the track's master document at `tracks/<track>/latex/main.tex`.
 - Use `\label{}` for all sections, subsections, tables, and figures so other sections can `\ref{}` them.
-- Tables and figures should be referenced via `\input{}` pointing to their standalone `.tex` files (e.g., `\input{tables/table_did_main.tex}`), not pasted inline.
+- Tables and figures should be referenced via `\input{}` pointing to their standalone `.tex` files (e.g., `\input{tables/table_did_main.tex}`, relative to `tracks/<track>/latex/`), not pasted inline.
 
 ---
 
@@ -36,7 +37,7 @@ Before writing any section, Claude Code should collect or confirm:
 - **Cochrane's "no warmup" rule**. Nothing before the main result of a section that the reader does not need to read in order to understand the main result. No replication of well-known datasets, no preliminary estimates, no descriptive-statistics travelogue placed in front of the main result.
 - **No previews or recalls**. Avoid "as we will see in Table 6" and "recall from Section 2." If you find yourself writing one, the order is wrong; fix the order.
 - **No adjectives on your own work**. No "striking results," "very significant" coefficients, "interesting findings." Cochrane: "If the work merits adjectives, the world will give them to you."
-- **Only write what is actually in the code and results**. Before drafting, read the code files in `code/` and the output files in `latex/tables/` and `latex/figures/`. Do not claim a robustness check, alternative specification, placebo test, or mechanism test was run unless there is a corresponding script and output file. Never write sentences like "results are robust to alternative specifications" or "we also find consistent results using X" if that analysis does not exist in the code.
+- **Only write what is actually in the code and results**. Before drafting, read the code files in `tracks/<track>/code/` (and shared `code/common.R` at the project root) and the output files in `tracks/<track>/latex/tables/` and `tracks/<track>/latex/figures/`. Do not claim a robustness check, alternative specification, placebo test, or mechanism test was run unless there is a corresponding script and output file. Never write sentences like "results are robust to alternative specifications" or "we also find consistent results using X" if that analysis does not exist in the code.
 - **Assume a sophisticated reader**. Do not explain what a fixed effect is, what a DiD does in general terms, or how OLS works. Explain *your* specification choices and why they are appropriate for *your* setting.
 
 ### Paragraph and Sentence Construction

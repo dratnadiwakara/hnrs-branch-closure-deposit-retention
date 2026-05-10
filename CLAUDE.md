@@ -189,7 +189,7 @@ Rules:
 ### Figure & Table Export
 
 - **During early-stage work (approach subfolders):** write outputs to the approach subfolder:
-  - Figures → `code/approach-[name]/figures/` as `.png` files with `bg = "transparent"`.
+  - Figures → `code/approach-[name]/figures/` as `.png` files with `bg = "white"`.
   - Tables → `code/approach-[name]/tables/` as `.md` files only — **no `.tex` during exploration**.
 - **Final stage only (on explicit user instruction):** copy outputs to `latex/figures/` and `latex/tables/` (converting to `.tex` at that point).
 - Never write to `latex/` during exploratory or approach-stage work.

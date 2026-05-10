@@ -26,6 +26,10 @@ This skill helps economists draft, structure, and polish academic papers with pr
 - Writing specific sections (introduction, literature review, conclusion)
 - Preparing papers for journal submission
 
+## Inputs
+
+- **`$ARGUMENTS`** (required first argument): `<track-name>` — the track folder name under `tracks/`, e.g. `did-april2026`. Drafted section files are written under `tracks/<track-name>/latex/sections/...` and `\input{}`-ed from `tracks/<track-name>/latex/main.tex`. Project root paths `data/raw/`, `data/constructed/`, and `code/common.R` are unchanged.
+
 ## Instructions
 
 ### Step 1: Identify Paper Type

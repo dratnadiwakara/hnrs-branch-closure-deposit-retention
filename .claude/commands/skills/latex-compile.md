@@ -10,15 +10,17 @@ You compile a single LaTeX (.tex) file to PDF. First try `latexmk` (fast path); 
 
 ## Input
 
-- The .tex file to compile is the file the user attached via @ (e.g. `@paper_Jan2026.tex`). Use that file's path.
-- If `$ARGUMENTS` is provided, treat it as the path to the .tex file and use it instead.
-- If neither is provided, default to `latex/main.tex`.
+- **`$ARGUMENTS`**: interpreted in this priority order:
+  1. If it is a literal path to a `.tex` file (contains `.tex` or path separators), use it directly as an override.
+  2. Otherwise treat it as a **track name** (e.g. `did-april2026`) and resolve to `tracks/<track>/latex/main.tex`.
+- If `$ARGUMENTS` is empty, fall back to the file the user attached via `@` (e.g. `@paper_Jan2026.tex`).
+- If neither `$ARGUMENTS` nor a `@` attachment is provided, **error out** and ask the user to provide a track name (e.g. `did-april2026`) or a `.tex` path.
 
 ## Path resolution
 
 From the chosen .tex path, derive:
 
-1. **`<tex_dir>`** — absolute directory containing the .tex file (e.g. `C:\OneDrive\github\depositor-discipline\latex`).
+1. **`<tex_dir>`** — absolute directory containing the .tex file (e.g. `C:\OneDrive\github\depositor-discipline\tracks\did-april2026\latex`).
 2. **`<stem>`** — filename without extension (e.g. `main`).
 3. **`<build_dir>`** — `<tex_dir>\build` (output directory for all generated files).
 

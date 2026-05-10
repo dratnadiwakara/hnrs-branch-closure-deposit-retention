@@ -19,6 +19,12 @@ contaminate results.
 
 ---
 
+## Inputs
+
+- **`$ARGUMENTS`**: `<track-name>` (required) — the track folder name under `tracks/`, e.g. `did-april2026`. The skill resolves regression and data-construction scripts under `tracks/<track-name>/code/sample-construction/` and `tracks/<track-name>/code/result-generation/`. Shared `code/common.R` and the project-root `data/raw/` and `data/constructed/` paths remain unchanged.
+
+---
+
 ## Step 1: Determine the Input Mode
 
 Ask the user (if not obvious from context) which mode applies:
@@ -84,9 +90,10 @@ Once identified, record the entity identifier(s) (e.g., `permno`, `gvkey`, `rssd
 
 ## Step 3: Generate the R Sanity-Check Script
 
-Create an R script at `.claude/cc/sanity-check/sanity_check_[descriptor].R` where
-`[descriptor]` is a short label derived from the regression or dataset name (e.g.,
-`sanity_check_main_reg.R` or `sanity_check_loan_panel.R`).
+Create an R script at `.claude/cc/sanity-check/sanity_check_<track>_<descriptor>.R` where
+`<track>` is the track name passed via `$ARGUMENTS` and `<descriptor>` is a short label
+derived from the regression or dataset name (e.g.,
+`sanity_check_did-april2026_main_reg.R` or `sanity_check_did-april2026_loan_panel.R`).
 
 The script should load the data (or reconstruct the exact estimation sample for Mode A)
 and perform every check below. All output should be captured and written to a Markdown
@@ -243,7 +250,7 @@ value beyond mechanical checks. Flag anything that looks off given standard know
 
 ## Step 4: Generate the Markdown Report
 
-Write the report to `.claude/cc/sanity-check/sanity_check_[descriptor].md`.
+Write the report to `.claude/cc/sanity-check/sanity_check_<track>_<descriptor>.md`.
 
 Use this structure:
 
@@ -251,8 +258,9 @@ Use this structure:
 # Sanity Check Report: [Descriptor]
 
 **Date:** [auto-generated]
-**Script:** `.claude/cc/sanity-check/sanity_check_[descriptor].R`
-**Source:** [path to the R script or data file being checked]
+**Track:** `<track>`
+**Script:** `.claude/cc/sanity-check/sanity_check_<track>_<descriptor>.R`
+**Source:** [path to the R script or data file being checked, e.g. `tracks/<track>/code/result-generation/...R`]
 **Mode:** [A: Regression | B: Data Construction]
 
 ## 1. Overview
