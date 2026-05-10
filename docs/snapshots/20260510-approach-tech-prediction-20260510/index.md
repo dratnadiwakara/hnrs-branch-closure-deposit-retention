@@ -3,13 +3,11 @@ layout: default
 title: "approach-tech-prediction-20260510 — 2026-05-10"
 ---
 
-# Snapshot: approach-tech-prediction-20260510 / phil-decomp
-
-> Implements Phil's May 5 1:33 PM email — predict zip-year closures directly from `frac_apps_zip × perc_hh_wMobileSub`, decompose actual closures into predicted (tech-driven) + residual (non-tech) parts. Sample restricted to 2012-2019 (pre-2012 has no app data; 2020+ saturates at frac_apps ≈ 0.94). Two `frac_apps` weightings (count and deposit) × two LHS measures (`fraction_of_branches_closed`, `share_deps_closed`) give 4 first-stage specs and 4 corresponding second-stage decompositions. Baseline OLS (`outcome ~ share_deps_closed`) replicates `approach-streamlined-20260423` T1 panelB col 3 exactly (β = 0.0098, N = 89,954). Two flavors of first stage shown: **without** mechanical controls (clean) and **with** controls. Without-controls specs have weak F-stats (1.65–3.65); with-controls specs have stronger fit but predicted is dominated by mechanical bank-density variation rather than tech driver. Across all 4 decomp specs, β_predicted is positive and (often) significant while β_residual is null — sign opposite Phil's hypothesis (theory predicted β_pred < β_res). Result driven by FE re-absorption + scaling artifact rather than behavior.
+# Snapshot: approach-tech-prediction-20260510
 
 ---
 
-## 1. First Stage — Without Controls (Option A)
+## 1. First Stage — Without Controls
 
 **Unit:** zip-year
 **LHS:** `fraction_of_branches_closed` (count) or `share_deps_closed` (depwt)
@@ -86,7 +84,7 @@ title: "approach-tech-prediction-20260510 — 2026-05-10"
 
 ---
 
-## 3. Second Stage — Without Controls in First Stage (matches Section 1)
+## 3. Second Stage — Matching Section 1 (no controls in first stage)
 
 **Unit:** zip-year
 **LHS:** `outcome` = (Σ inc_deps_{t+1} − Σ inc_deps_t) / total_zip_deps_{t−1} — 1-year incumbent reallocation
@@ -119,7 +117,7 @@ title: "approach-tech-prediction-20260510 — 2026-05-10"
 
 ---
 
-## 4. Second Stage — With Controls in First Stage (matches Section 2)
+## 4. Second Stage — Matching Section 2 (controls in first stage)
 
 **Unit:** zip-year
 **LHS:** `outcome` = 1-year incumbent reallocation (same as Section 3)
